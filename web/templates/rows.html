@@ -1,0 +1,30 @@
+{{define "rows"}}{{range .}}
+<tr class="row{{if eq .Rank 1}} top1{{end}}" x-show="'{{.Ticker}} {{.CompanyName}}'.toLowerCase().includes(search.toLowerCase())" x-on:click="openRow = (openRow === '{{.Ticker}}' ? '' : '{{.Ticker}}')">
+  <td><span class="rank-no">{{.Rank}}</span></td>
+  <td><span class="ticker">{{.Ticker}}</span><div class="company">{{.CompanyName}} · {{.Sector}}</div></td>
+  <td class="num">{{rp .Price}}</td>
+  <td class="num">{{r2 .GLScore}}<div class="bar"><span style="width:{{pctW .GLScore}}%"></span></div></td>
+  <td class="num">{{r2 .GrahamScore}}</td>
+  <td class="num">{{r2 .LynchScore}}</td>
+  <td class="num">{{pct .MarginOfSafety}}</td>
+  <td class="num">{{fval .PEG}}</td>
+  <td class="num">{{pctPtr .EPSGrowth}}</td>
+  <td><span class="badge {{badge .GLScore}}"><span class="dot"></span>{{badgeLabel .GLScore}}</span></td>
+</tr>
+<tr class="detail" x-show="openRow === '{{.Ticker}}'" x-cloak>
+  <td colspan="10">
+    <div class="detail-grid">
+      <div class="metric"><div class="k">Graham Value</div><div class="v">IDR {{rp .GrahamValue}}</div></div>
+      <div class="metric"><div class="k">Margin of Safety</div><div class="v">{{pct .MarginOfSafety}}</div></div>
+      <div class="metric"><div class="k">PE</div><div class="v">{{fval .PE}}</div></div>
+      <div class="metric"><div class="k">PB</div><div class="v">{{fval .PB}}</div></div>
+      <div class="metric"><div class="k">PEG</div><div class="v">{{fval .PEG}}</div></div>
+      <div class="metric"><div class="k">EPS Growth</div><div class="v">{{pctPtr .EPSGrowth}}</div></div>
+      <div class="metric"><div class="k">Revenue Growth</div><div class="v">{{pctPtr .RevenueGrowth}}</div></div>
+      <div class="metric"><div class="k">ROE</div><div class="v">{{pctPtr .ROE}}</div></div>
+      <div class="metric"><div class="k">Data Date</div><div class="v">{{.DataDate}}</div></div>
+    </div>
+    <div class="hint" style="margin-top:8px">Score breakdowns represent relative percentile ranks across the eligible universe for this run, not absolute valuations.</div>
+  </td>
+</tr>
+{{end}}{{end}}

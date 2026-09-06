@@ -1,0 +1,10 @@
+# Litestream — replikasi SQLite. NONAKTIF di dev (LITESTREAM_ENABLED=false).
+# Aktifkan hanya via: docker compose --profile replication up -d
+# Contoh S3 (isi via env saat prod):
+# dbs:
+#   - path: /data/gemhunter.db
+#     replicas:
+#       - url: s3://BUCKET/gemhunter
+#         access-key-id: ${AWS_ACCESS_KEY_ID}
+#         secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+dbs: []

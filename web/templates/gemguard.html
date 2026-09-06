@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gem Guard - Anti-Manipulation & UMA Surveillance | Gem Hunter</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+      <span class="gem">◆</span><span>GEM HUNTER<small>QUANT SCREENING</small></span>
+    </a>
+  </div>
+  <nav class="nav-links">
+    <a href="/" class="nav-item">Dashboard</a>
+    <a href="/gemguard" class="nav-item active">Gem Guard</a>
+    <a href="/methodology" class="nav-item">Methodology</a>
+  </nav>
+  <div class="spacer"></div>
+  <span class="pill">Surveillance: <b>PIR & UMA Detection</b></span>
+</header>
+
+<main class="container" x-data="{ search: '', openRow: '' }">
+  <div class="hero">
+    <div>
+      <h1>GEM GUARD SURVEILLANCE</h1>
+      <p>Continuous quantitative surveillance layer detecting High-Share Concentration (HSC), Unusual Market Activity (UMA) patterns, and manipulation risk using Sectors.app data. Full scientific methodology: <a href="/methodology#gem-guard">view on the Methodology page</a>.</p>
+    </div>
+  </div>
+
+  <section class="stats">
+    <div class="stat"><div class="label">Stocks Monitored</div><div class="value">{{len .Stocks}}</div><div class="sub">active surveillance set</div></div>
+    <div class="stat"><div class="label">High Risk Alerts</div><div class="value">{{.HighRisk}}</div><div class="sub">flagged for review</div></div>
+    <div class="stat"><div class="label">PIR Alert Threshold</div><div class="value">> 2.0</div><div class="sub">float sensitivity</div></div>
+    <div class="stat"><div class="label">Volume Spike Limit</div><div class="value">> 3.0x</div><div class="sub">vs 20d average</div></div>
+  </section>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="live-dot"></span><h2>SURVEILLANCE</h2>
+      <div class="spacer" style="flex:1"></div>
+      <span class="hint">click row for details</span>
+    </div>
+    <div class="toolbar" style="padding:0 18px">
+      <input type="search" placeholder="Search ticker / company…" x-model="search">
+    </div>
+    <div style="overflow-x:auto">
+    <table class="rank">
+      <thead><tr>
+        <th>#</th><th>Ticker</th><th>Price</th><th class="num">Risk Score</th>
+        <th class="num">PIR</th><th class="num">Vol Spike</th>
+        <th class="num">Price Spike</th><th class="num">DER</th><th class="num">Insider Sell</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        {{range .Stocks}}
+        <tr class="row{{if eq .Rank 1}} top1{{end}}" x-show="'{{.Ticker}} {{.CompanyName}}'.toLowerCase().includes(search.toLowerCase())" x-on:click="openRow = (openRow === '{{.Ticker}}' ? '' : '{{.Ticker}}')">
+          <td><span class="rank-no">{{.Rank}}</span></td>
+          <td><span class="ticker">{{.Ticker}}</span><div class="company">{{.CompanyName}} · {{.Sector}}</div></td>
+          <td class="num">{{rp .Price}}</td>
+          <td class="num">{{r2 .RiskScore}}<div class="bar"><span style="width:{{pctW .RiskScore}}%"></span></div></td>
+          <td class="num {{if gt .PriceImpactRatio 2.0}}text-danger{{end}}">{{r2 .PriceImpactRatio}}</td>
+          <td class="num {{if gte .VolumeSpike 3.0}}text-warning{{end}}">{{r2 .VolumeSpike}}x</td>
+          <td class="num {{if gte .PriceSpikePct 20.0}}text-danger{{end}}">{{if gt .PriceSpikePct 0.0}}+{{end}}{{r2 .PriceSpikePct}}%</td>
+          <td class="num">{{r2 .DER}}</td>
+          <td class="num {{if gt .InsiderSellingPct 0.0}}text-danger{{end}}">{{r2 .InsiderSellingPct}}%</td>
+          <td>
+            {{if eq .RiskLevel "HIGH"}}
+              <span class="badge weak"><span class="dot"></span>HIGH RISK</span>
+            {{else}}
+              {{if eq .RiskLevel "MEDIUM"}}
+                <span class="badge neutral"><span class="dot"></span>MEDIUM</span>
+              {{else}}
+                <span class="badge strong"><span class="dot"></span>LOW RISK</span>
+              {{end}}
+            {{end}}
+          </td>
+        </tr>
+        <tr class="detail" x-show="openRow === '{{.Ticker}}'" x-cloak>
+          <td colspan="10">
+            <div class="detail-grid">
+              <div class="metric"><div class="k">Risk Score</div><div class="v">{{r2 .RiskScore}} / 100</div></div>
+              <div class="metric"><div class="k">PIR</div><div class="v">{{r2 .PriceImpactRatio}}</div></div>
+              <div class="metric"><div class="k">Velocity</div><div class="v">{{r2 .Velocity}}</div></div>
+              <div class="metric"><div class="k">Volume Spike</div><div class="v">{{r2 .VolumeSpike}}x</div></div>
+              <div class="metric"><div class="k">Price Spike</div><div class="v">{{r2 .PriceSpikePct}}%</div></div>
+              <div class="metric"><div class="k">ARA Threshold</div><div class="v">{{r2 .ARAThreshold}}%</div></div>
+              <div class="metric"><div class="k">ARA Consec Days</div><div class="v">{{.ARACountConsec}}</div></div>
+              <div class="metric"><div class="k">DER</div><div class="v">{{r2 .DER}}</div></div>
+              <div class="metric"><div class="k">Insider Sell</div><div class="v">{{r2 .InsiderSellingPct}}%</div></div>
+              <div class="metric"><div class="k">Volatility</div><div class="v">{{r2 .Volatility}}</div></div>
+              <div class="metric"><div class="k">RSI</div><div class="v">{{r2 .RSI}}</div></div>
+              <div class="metric"><div class="k">UMA Suspected</div><div class="v">{{if .UMASuspected}}Yes{{else}}No{{end}}</div></div>
+            </div>
+            {{if .PrimaryRiskFactors}}
+            <div class="hint" style="margin-top:8px"><b>Risk factors:</b> {{range $i, $f := .PrimaryRiskFactors}}{{if $i}} · {{end}}{{$f}}{{end}}</div>
+            {{end}}
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="disclaimer">Gem Guard is a <b>quantitative surveillance tool</b> and <b>not financial advice, a guarantee of returns, or a substitute for personal due diligence</b>. Scores are heuristic risk signals, not regulatory UMA determinations.</div>
+  <div class="footnote">Risk bands: HIGH (score >=70) · MEDIUM (40-69) · LOW (&lt;40). PIR alert &gt;2.0 · Volume Spike &gt;3x. Data source: Sectors.app Financial API V2.</div>
+  <div class="footer">GEM HUNTER · Gem Guard anti-manipulation surveillance</div>
+</main>
+</body>
+</html>

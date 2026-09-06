@@ -1,0 +1,27 @@
+# Binaries & build output
+/server
+/bin/
+/dist/
+
+# Data & runtime
+/data/
+*.db
+*.sqlite
+*.sqlite-*
+litestream.db
+
+# Env & secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Go cache (if vendored locally)
+vendor/

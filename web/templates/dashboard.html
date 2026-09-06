@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gem Hunter - Top 10 IDX</title>
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+      <span class="gem">◆</span><span>GEM HUNTER<small>QUANT SCREENING</small></span>
+    </a>
+  </div>
+  <nav class="nav-links">
+    <a href="/" class="nav-item active">Dashboard</a>
+    <a href="/gemguard" class="nav-item">Gem Guard</a>
+    <a href="/methodology" class="nav-item">Methodology</a>
+  </nav>
+  <div class="spacer"></div>
+  <span class="pill">Last update: <b>{{.Run.CalculatedAt}} WIB</b></span>
+  <span class="pill">Next update: <b>{{.NextUpdate}} WIB</b></span>
+</header>
+
+<main class="container" x-data="{ search: '', openRow: '' }">
+  <div class="hero">
+    <div>
+      <h1>TOP 10 IDX</h1>
+      <p>Quantitative screening score combining Graham + Lynch valuation models, updated 4 times daily at 00:00, 06:00, 12:00, and 18:00 WIB using Sectors.app V2 data. Scores represent relative percentile ranks across the eligible universe; not investment advice.</p>
+    </div>
+  </div>
+
+  {{if .Run.Stale}}
+  <div class="notice">⚠ Data may be stale: displaying cached results due to a failed update. Please check back later.</div>
+  {{end}}
+
+  <section class="stats">
+    <div class="stat"><div class="label">Candidates</div><div class="value">{{.Run.Count}}</div><div class="sub">top ranked stocks</div></div>
+    <div class="stat"><div class="label">Top GL Score</div><div class="value">{{r2 (topGL .Run.Stocks)}}</div><div class="sub">scale 0 to 100</div></div>
+    <div class="stat"><div class="label">Data As Of</div><div class="value" style="font-size:16px">{{.Run.DataAsOf}}</div><div class="sub">run {{shortID .Run.RunID}}</div></div>
+  </section>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="live-dot"></span><h2>RANKINGS</h2>
+      <span class="htmx-indicator">refreshing…</span>
+      <div class="spacer" style="flex:1"></div>
+      <span class="hint">click row for details</span>
+    </div>
+    <div class="toolbar" style="padding:0 18px">
+      <input type="search" placeholder="Search ticker / company…" x-model="search">
+    </div>
+    <div style="overflow-x:auto">
+    <table class="rank">
+      <thead><tr>
+        <th>#</th><th>Ticker</th><th>Price</th><th class="num">GL Score</th>
+        <th class="num">Graham</th><th class="num">Lynch</th>
+        <th class="num">MOS</th><th class="num">PEG</th><th class="num">EPS Growth</th><th>Status</th>
+      </tr></thead>
+      <tbody hx-get="/ranking/top10" hx-trigger="every 60s" hx-swap="innerHTML">
+        {{template "rows" .Run.Stocks}}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="disclaimer">Gem Hunter is a <b>quantitative screening tool</b> and <b>not financial advice, a guarantee of returns, or a substitute for personal due diligence</b>. Always conduct your own research.</div>
+  <div class="footnote">Score bands: 90+ Exceptional · 80+ Strong · 70+ Attractive · 60+ Neutral · &lt;60 Weak. Data source: Sectors.app Financial API V2.</div>
+  <div class="footer">GEM HUNTER · quantitative ranking signal · calculated {{.Run.CalculatedAt}} WIB</div>
+</main>
+</body>
+</html>

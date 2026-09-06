@@ -1,0 +1,43 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      SQLITE_PATH: /data/gemhunter.db
+      LITESTREAM_ENABLED: "false"
+    volumes:
+      - appdata:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Profil opsional, NONAKTIF default. Aktifkan: docker compose --profile replication up -d
+  litestream:
+    image: litestream/litestream:0.3
+    profiles: ["replication"]
+    volumes:
+      - appdata:/data
+      - ./litestream.yml:/etc/litestream.yml:ro
+    command: ["replicate", "-config", "/etc/litestream.yml"]
+    depends_on:
+      app:
+        condition: service_started
+
+volumes:
+  appdata:
+  redisdata:
