@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
+	"gemhunter/internal/ai"
 	"gemhunter/internal/config"
 	"gemhunter/internal/gemguard"
 	"gemhunter/internal/repository"
@@ -37,6 +38,11 @@ func main() {
 	}
 	defer store.Close()
 
+	aiAgent := ai.NewAgent(store)
+	aiWorker := ai.NewWorker(aiAgent)
+	aiWorker.Start(context.Background())
+	defer aiWorker.Stop()
+
 	run := func() service.RunResult {
 		nowWIB := time.Now().In(wib)
 		r := service.Rank(service.MockUniverse(), nowWIB, cfg.MaxDataAgeHours, cfg.MinEPSGrowth)
@@ -47,6 +53,7 @@ func main() {
 			log.Printf(`{"level":"error","event":"ranking_save","error":%q}`, err.Error())
 		}
 		log.Printf(`{"level":"info","event":"ranking_run","run_id":%q,"count":%d,"db":%q}`, r.RunID, r.Count, cfg.DBPath)
+		aiWorker.Enqueue(r)
 		return r
 	}
 	run()
@@ -124,6 +131,30 @@ func main() {
 	app.Get("/api/v1/gemguard", func(c *fiber.Ctx) error {
 		stocks := defaultGemGuardSurveillance()
 		return c.JSON(stocks)
+	})
+	app.Get("/api/v1/ai/analysis/:ticker", func(c *fiber.Ctx) error {
+		ticker := c.Params("ticker")
+		an, ok := aiAgent.GetAnalysis(ticker)
+		if !ok {
+			return c.Status(444).Status(404).JSON(fiber.Map{"error": "analysis pending or not found"})
+		}
+		return c.JSON(an)
+	})
+	app.Get("/api/v1/ai/run/:run_id", func(c *fiber.Ctx) error {
+		runID := c.Params("run_id")
+		an, ok := aiAgent.GetRunAnalyses(runID)
+		if !ok {
+			return c.Status(404).JSON(fiber.Map{"error": "run analysis not found"})
+		}
+		return c.JSON(an)
+	})
+	app.Post("/admin/ai/run", func(c *fiber.Ctx) error {
+		if cfg.AdminToken == "" || c.Get("Authorization") != "Bearer "+cfg.AdminToken {
+			return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+		}
+		r := mustLatest(store, cfg, run)
+		aiWorker.Enqueue(r)
+		return c.JSON(fiber.Map{"status": "enqueued", "run_id": r.RunID})
 	})
 	app.Get("/static/*", func(c *fiber.Ctx) error {
 		p := c.Params("*")

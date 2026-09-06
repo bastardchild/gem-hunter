@@ -92,3 +92,19 @@ func (s *Store) Latest() (service.RunResult, bool) {
 	}
 	return s.latest, true
 }
+
+func (s *Store) ListRuns(ctx context.Context, limit int) ([]service.RunResult, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if len(s.hist) == 0 {
+		if s.latest.RunID != "" {
+			return []service.RunResult{s.latest}, nil
+		}
+		return nil, nil
+	}
+	out := make([]service.RunResult, 0, len(s.hist))
+	for i := len(s.hist) - 1; i >= 0 && len(out) < limit; i-- {
+		out = append(out, s.hist[i])
+	}
+	return out, nil
+}
