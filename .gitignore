@@ -25,3 +25,4 @@ Thumbs.db
 
 # Go cache (if vendored locally)
 vendor/
+.memory/
