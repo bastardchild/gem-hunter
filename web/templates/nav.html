@@ -1,0 +1,21 @@
+{{define "nav"}}
+  <nav class="nav-links">
+    <a href="/" class="nav-item{{if eq . "dashboard"}} active{{end}}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20"/><path d="M12 21l-3-12"/><path d="M12 21l3-12"/></svg>
+      Gem Hunter
+    </a>
+    <a href="/gemguard" class="nav-item{{if eq . "gemguard"}} active{{end}}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      Gem Guard
+    </a>
+    <a href="/gemsentinel" class="nav-item{{if eq . "gemsentinel"}} active{{end}}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      Gem Sentinel
+    </a>
+    <a href="/methodology" class="nav-item{{if eq . "methodology"}} active{{end}}">Methodology</a>
+    <a href="/proof" class="nav-item{{if eq . "proof"}} active{{end}}">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M12 12l-3-3 3 3 3-3-3 3z"/><path d="M9 16h6"/></svg>
+      5-Year Proof
+    </a>
+  </nav>
+{{end}}

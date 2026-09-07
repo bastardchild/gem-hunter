@@ -53,12 +53,17 @@ type reportEnvelope struct {
 			EPSGrowth *float64 `json:"eps_growth"`
 		} `json:"historical_eps"`
 		HistFin []struct {
-			Year             int      `json:"year"`
-			Revenue          *float64 `json:"revenue"`
-			Earnings         *float64 `json:"earnings"`
-			TotalEquity      *float64 `json:"total_equity"`
-			OutstandingShare *float64 `json:"outstanding_shares"`
-			ROE              *float64 `json:"roe"`
+			Year               int      `json:"year"`
+			Revenue            *float64 `json:"revenue"`
+			Earnings           *float64 `json:"earnings"`
+			TotalEquity        *float64 `json:"total_equity"`
+			OutstandingShare   *float64 `json:"outstanding_shares"`
+			ROE                *float64 `json:"roe"`
+			WorkingCapital     *float64 `json:"working_capital"`
+			TotalAssets        *float64 `json:"total_assets"`
+			EBIT               *float64 `json:"ebit"`
+			ProfitBeforeTax    *float64 `json:"profit_before_tax"`
+			CurrentLiabilities *float64 `json:"current_liabilities"`
 		} `json:"historical_financials"`
 	} `json:"financials"`
 	Dividend struct {
@@ -164,6 +169,11 @@ func MapReport(r reportEnvelope) domain.Snapshot {
 		eq     *float64
 		sh     *float64
 		pe, pb *float64
+		wc     *float64
+		ta     *float64
+		ebit   *float64
+		ebt    *float64
+		cl     *float64
 	}
 	m := map[int]*yr{}
 	for _, h := range r.Financials.HistFin {
@@ -173,6 +183,7 @@ func MapReport(r reportEnvelope) domain.Snapshot {
 			m[h.Year] = e
 		}
 		e.rev, e.eq, e.sh = h.Revenue, h.TotalEquity, h.OutstandingShare
+		e.wc, e.ta, e.ebit, e.ebt, e.cl = h.WorkingCapital, h.TotalAssets, h.EBIT, h.ProfitBeforeTax, h.CurrentLiabilities
 	}
 	for ys, he := range r.Financials.HistEPS {
 		var y int
@@ -220,6 +231,21 @@ func MapReport(r reportEnvelope) domain.Snapshot {
 		}
 		if cur.rev != nil {
 			s.Revenue = cur.rev
+		}
+		if cur.wc != nil {
+			s.WorkingCapital = cur.wc
+		}
+		if cur.ta != nil {
+			s.TotalAssets = cur.ta
+		}
+		if cur.ebit != nil {
+			s.EBIT = cur.ebit
+		}
+		if cur.ebt != nil {
+			s.ProfitBeforeTax = cur.ebt
+		}
+		if cur.cl != nil {
+			s.CurrentLiabilities = cur.cl
 		}
 		if len(years) > 1 {
 			prv := m[years[1]]

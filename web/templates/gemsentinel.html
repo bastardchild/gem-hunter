@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+{{template "head" .}}
+<title>Gem Sentinel - Springate Financial Distress & Bankruptcy Surveillance | Gem Hunter</title>
+</head>
+<body>
+{{template "header" (hdr "gemsentinel" .)}}
+
+<main class="container" x-data="{ search: '', openRow: '' }">
+  <div class="hero">
+    <div>
+      <h1>GEM SENTINEL SURVEILLANCE</h1>
+      <p>Automated quantitative financial distress & bankruptcy surveillance model powered by <b>Springate Multiple Discriminant Analysis (MDA)</b> and Sectors.app financial data. Continuously ranks universe stocks to highlight the <b>Top 5 most vulnerable companies</b>.</p>
+    </div>
+  </div>
+
+  <section class="stats">
+    <div class="stat"><div class="label">Top Vulnerable Stocks</div><div class="value">{{len .Stocks}}</div><div class="sub">scanned in distress zone</div></div>
+    <div class="stat"><div class="label">Critical Distress (< 0.50)</div><div class="value">{{.CriticalCount}}</div><div class="sub">severe solvency alert</div></div>
+    <div class="stat"><div class="label">Distress Cutoff</div><div class="value">< 0.862</div><div class="sub">Springate score threshold</div></div>
+    <div class="stat"><div class="label">Model Accuracy</div><div class="value">High</div><div class="sub">proven for IDX emiten</div></div>
+  </section>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="live-dot" style="background:#ef4444;box-shadow:0 0 8px #ef4444"></span><h2>TOP 5 FINANCIAL DISTRESS WATCHLIST</h2>
+      <div class="spacer" style="flex:1"></div>
+      <span class="hint">click row for Springate ratio breakdown & AI summary</span>
+    </div>
+    <div class="toolbar" style="padding:0 18px">
+      <input type="search" placeholder="Search ticker / company…" x-model="search">
+    </div>
+    <div style="overflow-x:auto">
+    <table class="rank">
+      <thead><tr>
+        <th>#</th><th>Ticker</th><th>Price</th><th>Market Cap</th><th class="num">Springate Score</th>
+        <th class="num">X1 (WC/TA)</th><th class="num">X2 (EBIT/TA)</th><th class="num">X3 (EBT/CL)</th><th class="num">X4 (Rev/TA)</th><th>Status</th>
+      </tr></thead>
+      <tbody>
+        {{range .Stocks}}
+        <tr class="row{{if eq .Rank 1}} top1{{end}}" x-show="'{{.Ticker}} {{.CompanyName}}'.toLowerCase().includes(search.toLowerCase())" x-on:click="openRow = (openRow === '{{.Ticker}}' ? '' : '{{.Ticker}}')">
+          <td><span class="rank-no">{{.Rank}}</span></td>
+          <td><span class="ticker">{{.Ticker}}</span><div class="company">{{.CompanyName}} · {{.Sector}}</div></td>
+          <td>{{rp .Price}}</td>
+          <td>{{rp .MarketCap}}</td>
+          <td class="num {{if lt .Springate.Score 0.50}}text-danger{{else if lt .Springate.Score 0.862}}text-warning{{end}}" style="font-weight:700">{{r2 .Springate.Score}}</td>
+          <td class="num {{if lt .Springate.X1 0.0}}text-danger{{end}}">{{r2 .Springate.X1}}</td>
+          <td class="num {{if lt .Springate.X2 0.0}}text-danger{{end}}">{{r2 .Springate.X2}}</td>
+          <td class="num {{if lt .Springate.X3 0.0}}text-danger{{end}}">{{r2 .Springate.X3}}</td>
+          <td class="num">{{r2 .Springate.X4}}</td>
+          <td>
+            {{if lt .Springate.Score 0.50}}
+              <span class="badge weak"><span class="dot"></span>CRITICAL</span>
+            {{else if lt .Springate.Score 0.862}}
+              <span class="badge neutral"><span class="dot"></span>MODERATE</span>
+            {{else}}
+              <span class="badge strong"><span class="dot"></span>HEALTHY</span>
+            {{end}}
+          </td>
+        </tr>
+        <tr class="detail" x-show="openRow === '{{.Ticker}}'" x-cloak>
+          <td colspan="10">
+            <div class="detail-grid">
+              <div class="metric"><div class="k">Springate Score</div><div class="v" style="color:var(--accent-red)">{{r2 .Springate.Score}}</div></div>
+              <div class="metric"><div class="k">Distress Zone</div><div class="v">{{.DistressLevel}}</div></div>
+              <div class="metric"><div class="k">X1 (Working Cap / Assets)</div><div class="v">{{r2 .Springate.X1}}</div></div>
+              <div class="metric"><div class="k">X2 (EBIT / Assets)</div><div class="v">{{r2 .Springate.X2}}</div></div>
+              <div class="metric"><div class="k">X3 (EBT / Current Liab)</div><div class="v">{{r2 .Springate.X3}}</div></div>
+              <div class="metric"><div class="k">X4 (Revenue / Assets)</div><div class="v">{{r2 .Springate.X4}}</div></div>
+            </div>
+            <div class="hint" style="margin-top:10px; font-size: 0.9em; line-height: 1.4;">
+              <b>Primary Vulnerability:</b> <span class="text-danger">{{.PrimaryVulnerability}}</span><br>
+              <b>AI Sentinel Synthesis:</b> {{.AISentinelSummary}}
+            </div>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="disclaimer">Gem Sentinel is a <b>quantitative surveillance tool</b> using Springate MDA (Score = 1.03X1 + 3.07X2 + 0.66X3 + 0.40X4) and <b>not financial advice or a guarantee of bankruptcy</b>. Cutoff threshold is 0.862.</div>
+  <div class="footnote">Distress bands: CRITICAL (Score &lt; 0.50) · MODERATE (0.50 - 0.861) · HEALTHY (&ge; 0.862). Data source: Sectors.app Financial API V2.</div>
+  <div class="footer">GEM HUNTER · Gem Sentinel financial distress surveillance</div>
+</main>
+</body>
+</html>

@@ -108,3 +108,81 @@ func (s *Store) ListRuns(ctx context.Context, limit int) ([]service.RunResult, e
 	}
 	return out, nil
 }
+
+type Subscription struct {
+	ID             int64  `json:"id"`
+	Email          string `json:"email"`
+	NotifyGems     bool   `json:"notify_gems"`
+	NotifyGuard    bool   `json:"notify_guard"`
+	NotifySentinel bool   `json:"notify_sentinel"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
+}
+
+func (s *Store) SaveSubscription(ctx context.Context, sub Subscription) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO email_subscriptions (email, notify_gems, notify_guard, notify_sentinel, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT(email) DO UPDATE SET
+			notify_gems = excluded.notify_gems,
+			notify_guard = excluded.notify_guard,
+			notify_sentinel = excluded.notify_sentinel,
+			updated_at = excluded.updated_at
+	`, sub.Email, sub.NotifyGems, sub.NotifyGuard, sub.NotifySentinel, now, now)
+	return err
+}
+
+func (s *Store) GetSubscription(ctx context.Context, email string) (Subscription, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var sub Subscription
+	row := s.db.QueryRowContext(ctx, `
+		SELECT id, email, notify_gems, notify_guard, notify_sentinel, created_at, updated_at
+		FROM email_subscriptions WHERE email = ?
+	`, email)
+	err := row.Scan(&sub.ID, &sub.Email, &sub.NotifyGems, &sub.NotifyGuard, &sub.NotifySentinel, &sub.CreatedAt, &sub.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return sub, false, nil
+	}
+	if err != nil {
+		return sub, false, err
+	}
+	return sub, true, nil
+}
+
+func (s *Store) ListSubscriptions(ctx context.Context) ([]Subscription, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, email, notify_gems, notify_guard, notify_sentinel, created_at, updated_at
+		FROM email_subscriptions
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []Subscription
+	for rows.Next() {
+		var sub Subscription
+		if err := rows.Scan(&sub.ID, &sub.Email, &sub.NotifyGems, &sub.NotifyGuard, &sub.NotifySentinel, &sub.CreatedAt, &sub.UpdatedAt); err != nil {
+			return nil, err
+		}
+		list = append(list, sub)
+	}
+	return list, nil
+}
+
+func (s *Store) LogEmail(ctx context.Context, email, emailType, subject, status, errMsg string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO email_logs (email, type, subject, status, error_msg, sent_at)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, email, emailType, subject, status, errMsg, now)
+	return err
+}

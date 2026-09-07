@@ -18,6 +18,12 @@ type Config struct {
 	MinEPSGrowth         float64
 	MaxDataAgeHours      int
 	AdminToken           string
+	SMTPHost             string
+	SMTPPort             int
+	SMTPUser             string
+	SMTPPassword         string
+	SMTPFrom             string
+	EmailAlertsEnabled   bool
 }
 
 func getenv(key, def string) string {
@@ -31,6 +37,7 @@ func Load() (Config, error) {
 	interval, _ := strconv.Atoi(getenv("RANKING_INTERVAL_HOURS", "6"))
 	maxAge, _ := strconv.Atoi(getenv("MAX_DATA_AGE_HOURS", "168"))
 	minG, _ := strconv.ParseFloat(getenv("MIN_EPS_GROWTH", "0"), 64)
+	smtpPort, _ := strconv.Atoi(getenv("SMTP_PORT", "587"))
 	c := Config{
 		Env:                  getenv("APP_ENV", "development"),
 		Port:                 getenv("PORT", "3000"),
@@ -43,6 +50,12 @@ func Load() (Config, error) {
 		MinEPSGrowth:         minG,
 		MaxDataAgeHours:      maxAge,
 		AdminToken:           os.Getenv("ADMIN_TOKEN"),
+		SMTPHost:             os.Getenv("SMTP_HOST"),
+		SMTPPort:             smtpPort,
+		SMTPUser:             os.Getenv("SMTP_USER"),
+		SMTPPassword:         os.Getenv("SMTP_PASSWORD"),
+		SMTPFrom:             getenv("SMTP_FROM", "Gem Hunter <alerts@gemhunter.app>"),
+		EmailAlertsEnabled:   getenv("EMAIL_ALERTS_ENABLED", "false") == "true",
 	}
 	if c.SectorsAPIKey == "" {
 		return c, fmt.Errorf("SECTORS_API_KEY is required")

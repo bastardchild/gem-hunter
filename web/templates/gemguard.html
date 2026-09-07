@@ -1,28 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+{{template "head" .}}
 <title>Gem Guard - Anti-Manipulation & UMA Surveillance | Gem Hunter</title>
-<link rel="stylesheet" href="/static/css/app.css">
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-<script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
-      <span class="gem">◆</span><span>GEM HUNTER<small>QUANT SCREENING</small></span>
-    </a>
-  </div>
-  <nav class="nav-links">
-    <a href="/" class="nav-item">Dashboard</a>
-    <a href="/gemguard" class="nav-item active">Gem Guard</a>
-    <a href="/methodology" class="nav-item">Methodology</a>
-  </nav>
-  <div class="spacer"></div>
-  <span class="pill">Surveillance: <b>PIR & UMA Detection</b></span>
-</header>
+{{template "header" (hdr "gemguard" .)}}
 
 <main class="container" x-data="{ search: '', openRow: '' }">
   <div class="hero">

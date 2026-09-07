@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gemhunter/internal/domain"
+	"gemhunter/internal/gemsentinel"
 	"gemhunter/internal/scoring"
 )
 
@@ -171,4 +172,77 @@ func Rank(snaps []domain.Snapshot, now time.Time, maxAgeH int, minEPSg float64) 
 		out[i].Rank = i + 1
 	}
 	return RunResult{CalculatedAt: now.Format("2006-01-02 15:04"), Count: len(out), Stocks: out}
+}
+
+// GetTop5SpringateDistress calculates Springate scores across all snapshots,
+// sorts ascending by score (highest financial distress risk first),
+// and returns the top 5 stocks in distress zone (score < 0.862).
+func GetTop5SpringateDistress(snaps []domain.Snapshot) []domain.SentinelStock {
+	// Dedup ticker
+	best := map[string]domain.Snapshot{}
+	for _, s := range snaps {
+		if p, ok := best[s.Ticker]; !ok || s.PublishedAt.After(p.PublishedAt) {
+			best[s.Ticker] = s
+		}
+	}
+
+	distressStocks := []domain.SentinelStock{}
+	for _, s := range best {
+		if s.Ticker == "" {
+			continue
+		}
+		analysis := gemsentinel.ComputeSpringateScore(&s)
+		
+		distressLevel := "🟢 Healthy"
+		if analysis.Score < gemsentinel.CutoffCritical {
+			distressLevel = "🔴 Critical"
+		} else if analysis.Score < gemsentinel.CutoffDistress {
+			distressLevel = "🟠 Moderate"
+		}
+
+		vuln := gemsentinel.IdentifyPrimaryVulnerability(analysis)
+
+		distressStocks = append(distressStocks, domain.SentinelStock{
+			Ticker:               s.Ticker,
+			CompanyName:          s.CompanyName,
+			Sector:               s.Sector,
+			Price:                s.Price,
+			MarketCap:            s.MarketCap,
+			Springate:            analysis,
+			DistressLevel:        distressLevel,
+			PrimaryVulnerability: vuln,
+		})
+	}
+
+	// Sort ascending by Springate Score (lowest score = highest bankruptcy risk)
+	sort.Slice(distressStocks, func(i, j int) bool {
+		if distressStocks[i].Springate.Score != distressStocks[j].Springate.Score {
+			return distressStocks[i].Springate.Score < distressStocks[j].Springate.Score
+		}
+		return distressStocks[i].Ticker < distressStocks[j].Ticker
+	})
+
+	// Filter only stocks in distress zone (< 0.862) or top 5 lowest if available
+	filtered := []domain.SentinelStock{}
+	for _, st := range distressStocks {
+		if st.Springate.Score < gemsentinel.CutoffDistress {
+			filtered = append(filtered, st)
+		}
+	}
+
+	// Fallback to top 5 lowest if none strictly below cutoff, or take up to 5
+	out := filtered
+	if len(out) == 0 && len(distressStocks) > 0 {
+		out = distressStocks
+	}
+	if len(out) > 5 {
+		out = out[:5]
+	}
+
+	for i := range out {
+		out[i].Rank = i + 1
+		out[i].AISentinelSummary = gemsentinel.GenerateSentinelSummary(out[i])
+	}
+
+	return out
 }

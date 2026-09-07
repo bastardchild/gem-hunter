@@ -26,3 +26,7 @@ Thumbs.db
 # Go cache (if vendored locally)
 vendor/
 .memory/
+
+# Task plans & docs
+task3.md
+

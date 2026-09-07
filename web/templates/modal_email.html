@@ -1,0 +1,124 @@
+{{define "modal_email"}}
+<div x-data="{ open: false, email: '', gems: true, guard: true, sentinel: true, statusMsg: '', isError: false, loading: false }"
+     @keydown.escape.window="open = false">
+  
+  <button @click="open = true" class="pill alert-btn-pulse" style="cursor: pointer; background: rgba(158, 1, 66, 0.18); border-color: rgba(158, 1, 66, 0.5); color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+    <span class="bell-icon" style="display: inline-block;">🔔</span> <span>Email Alerts</span>
+  </button>
+
+  <!-- Modal Backdrop with Backdrop Blur & Fade -->
+  <div x-show="open" 
+       x-transition.opacity.duration.200ms
+       style="position: fixed; inset: 0; z-index: 999; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 16px;" 
+       x-cloak>
+    
+    <!-- Modal Dialog Box with Smooth Scale, Elevation & Subtle Glow -->
+    <div @click.away="open = false" 
+         x-show="open"
+         x-transition.duration.200ms
+         class="card modal-glow-box" 
+         style="width: 100%; max-width: 490px; background: linear-gradient(180deg, #1c1917 0%, #141210 100%); border: 1px solid rgba(255, 255, 255, 0.12); padding: 26px; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 20px rgba(158, 1, 66, 0.15);">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+          <span style="color: #d53e4f; filter: drop-shadow(0 0 6px rgba(213,62,79,0.6));">◆</span> Email Alert Preferences
+        </h3>
+        <button @click="open = false" 
+                class="modal-close-btn"
+                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--muted); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: all 0.15s ease;">
+          &times;
+        </button>
+      </div>
+
+      <p style="font-size: 13px; color: #a1a1aa; margin-top: 0; margin-bottom: 18px; line-height: 1.55;">
+        Receive quantitative digests and market anomaly alerts directly in your inbox during scheduled screening cycles (00/06/12/18 WIB).
+      </p>
+
+      <form @submit.prevent="
+        loading = true;
+        statusMsg = '';
+        fetch('/api/v1/subscribe', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email: email, notify_gems: gems, notify_guard: guard, notify_sentinel: sentinel})
+        })
+        .then(r => r.json())
+        .then(d => {
+          loading = false;
+          if (d.error) { isError = true; statusMsg = d.error; }
+          else { isError = false; statusMsg = 'Email subscription preferences saved successfully!'; }
+        })
+        .catch(e => { loading = false; isError = true; statusMsg = 'System error occurred.'; });
+      ">
+        
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #a1a1aa; margin-bottom: 6px;">Recipient Email</label>
+          <input type="email" x-model="email" required placeholder="name@domain.com" 
+                 class="custom-email-input"
+                 style="width: 100%; background: #0c0a09; border: 1px solid rgba(255,255,255,0.15); color: #f2f2f2; padding: 11px 14px; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s ease;">
+        </div>
+
+        <div style="margin-bottom: 22px; display: flex; flex-direction: column; gap: 11px; background: rgba(0,0,0,0.35); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.06);">
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+            <input type="checkbox" x-model="gems" style="accent-color: #d53e4f; width: 16px; height: 16px;">
+            <span><b style="color:#abdda4;">Top 10 Gems</b> (Graham + Lynch Screening)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+            <input type="checkbox" x-model="guard" style="accent-color: #d53e4f; width: 16px; height: 16px;">
+            <span><b style="color:#fdae61;">Gem Guard</b> (High Risk / PIR & UMA Signals)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; user-select: none;">
+            <input type="checkbox" x-model="sentinel" style="accent-color: #d53e4f; width: 16px; height: 16px;">
+            <span><b style="color:#d53e4f;">Gem Sentinel</b> (Distress Radar / Springate)</span>
+          </label>
+        </div>
+
+        <template x-if="statusMsg">
+          <div :style="isError ? 'color: #ff6b6b; background: rgba(213,62,79,0.12); border-color: rgba(213,62,79,0.35);' : 'color: #abdda4; background: rgba(171,221,164,0.12); border-color: rgba(171,221,164,0.35);'"
+               style="padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; border: 1px solid; display: flex; align-items: center; gap: 8px; animation: slideIn 0.25s ease;" 
+               x-text="statusMsg"></div>
+        </template>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" 
+                  class="btn-secondary-cool"
+                  @click="
+                    if (!email) { isError = true; statusMsg = 'Please enter an email address first.'; return; }
+                    loading = true;
+                    statusMsg = '';
+                    fetch('/api/v1/email/test', {
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({email: email})
+                    })
+                    .then(r => r.json())
+                    .then(d => {
+                      loading = false;
+                      if (d.error) { isError = true; statusMsg = d.error; }
+                      else { isError = false; statusMsg = 'Test email dispatched! Check your inbox/spam folder.'; }
+                    })
+                    .catch(e => { loading = false; isError = true; statusMsg = 'Failed to send test email.'; });
+                  "
+                  style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: #e4e4e7; padding: 10px 15px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;">
+            Send Test Email
+          </button>
+          
+          <button type="submit" :disabled="loading" 
+                  class="btn-primary-cool"
+                  style="background: linear-gradient(135deg, #d53e4f 0%, #9e0142 100%); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(158, 1, 66, 0.35); transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+            <span x-show="!loading">Save Preferences</span>
+            <span x-show="loading" style="display: inline-flex; align-items: center; gap: 6px;">
+              <svg style="animation: spin 1s linear infinite; width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10"></path>
+              </svg>
+              Saving...
+            </span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{{end}}

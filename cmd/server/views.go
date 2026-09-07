@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"gemhunter/internal/gemguard"
+	"gemhunter/internal/domain"
 	"gemhunter/internal/service"
 	"gemhunter/web"
 )
@@ -37,6 +38,9 @@ var tmpl = template.Must(template.New("").Funcs(template.FuncMap{
 			return id[:8]
 		}
 		return id
+	},
+	"hdr": func(active string, data interface{}) map[string]interface{} {
+		return map[string]interface{}{"Active": active, "Data": data}
 	},
 }).ParseFS(web.FS, "templates/*.html"))
 
@@ -87,6 +91,14 @@ func renderMethodology() (string, error) {
 	return b.String(), nil
 }
 
+func renderProof() (string, error) {
+	var b bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&b, "proof.html", nil); err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
 func renderGemGuard(stocks []gemguard.StockSecurityAnalysis) (string, error) {
 	var b bytes.Buffer
 	high := 0
@@ -103,6 +115,27 @@ func renderGemGuard(stocks []gemguard.StockSecurityAnalysis) (string, error) {
 		HighRisk: high,
 	}
 	if err := tmpl.ExecuteTemplate(&b, "gemguard.html", data); err != nil {
+		return "", err
+	}
+	return b.String(), nil
+}
+
+func renderGemSentinel(stocks []domain.SentinelStock) (string, error) {
+	var b bytes.Buffer
+	critical := 0
+	for _, s := range stocks {
+		if s.Springate.Score < 0.50 {
+			critical++
+		}
+	}
+	data := struct {
+		Stocks       []domain.SentinelStock
+		CriticalCount int
+	}{
+		Stocks:       stocks,
+		CriticalCount: critical,
+	}
+	if err := tmpl.ExecuteTemplate(&b, "gemsentinel.html", data); err != nil {
 		return "", err
 	}
 	return b.String(), nil

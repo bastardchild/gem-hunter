@@ -14,6 +14,7 @@ import (
 	"gemhunter/internal/ai"
 	"gemhunter/internal/config"
 	"gemhunter/internal/gemguard"
+	"gemhunter/internal/notifier"
 	"gemhunter/internal/repository"
 	"gemhunter/internal/service"
 	"gemhunter/web"
@@ -43,6 +44,8 @@ func main() {
 	aiWorker.Start(context.Background())
 	defer aiWorker.Stop()
 
+	mailer := notifier.New(cfg, store)
+
 	run := func() service.RunResult {
 		nowWIB := time.Now().In(wib)
 		r := service.Rank(service.MockUniverse(), nowWIB, cfg.MaxDataAgeHours, cfg.MinEPSGrowth)
@@ -54,6 +57,15 @@ func main() {
 		}
 		log.Printf(`{"level":"info","event":"ranking_run","run_id":%q,"count":%d,"db":%q}`, r.RunID, r.Count, cfg.DBPath)
 		aiWorker.Enqueue(r)
+
+		// Dispatch email alerts ke subscribers
+		go mailer.DispatchScheduledDigest(
+			context.Background(),
+			r,
+			defaultGemGuardSurveillance(),
+			service.GetTop5SpringateDistress(service.MockUniverse()),
+		)
+
 		return r
 	}
 	run()
@@ -120,6 +132,13 @@ func main() {
 		}
 		return c.Type("html").SendString(html)
 	})
+	app.Get("/proof", func(c *fiber.Ctx) error {
+		html, err := renderProof()
+		if err != nil {
+			return fiber.NewError(500, err.Error())
+		}
+		return c.Type("html").SendString(html)
+	})
 	app.Get("/gemguard", func(c *fiber.Ctx) error {
 		stocks := defaultGemGuardSurveillance()
 		html, err := renderGemGuard(stocks)
@@ -131,6 +150,40 @@ func main() {
 	app.Get("/api/v1/gemguard", func(c *fiber.Ctx) error {
 		stocks := defaultGemGuardSurveillance()
 		return c.JSON(stocks)
+	})
+	app.Get("/gemsentinel", func(c *fiber.Ctx) error {
+		stocks := service.GetTop5SpringateDistress(service.MockUniverse())
+		html, err := renderGemSentinel(stocks)
+		if err != nil {
+			return fiber.NewError(500, err.Error())
+		}
+		return c.Type("html").SendString(html)
+	})
+	app.Get("/api/v1/gemsentinel", func(c *fiber.Ctx) error {
+		stocks := service.GetTop5SpringateDistress(service.MockUniverse())
+		return c.JSON(stocks)
+	})
+	app.Post("/api/v1/subscribe", func(c *fiber.Ctx) error {
+		var req repository.Subscription
+		if err := c.BodyParser(&req); err != nil || req.Email == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "Format request/email tidak valid"})
+		}
+		if err := store.SaveSubscription(c.Context(), req); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Gagal menyimpan preferensi email: " + err.Error()})
+		}
+		return c.JSON(fiber.Map{"status": "success", "message": "Subscription berhasil disimpan"})
+	})
+	app.Post("/api/v1/email/test", func(c *fiber.Ctx) error {
+		var req struct {
+			Email string `json:"email"`
+		}
+		if err := c.BodyParser(&req); err != nil || req.Email == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "Format email tidak valid"})
+		}
+		if err := mailer.SendTestEmail(c.Context(), req.Email); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Gagal mengirim email uji coba: " + err.Error()})
+		}
+		return c.JSON(fiber.Map{"status": "success", "message": "Email tes berhasil dikirim"})
 	})
 	app.Get("/api/v1/ai/analysis/:ticker", func(c *fiber.Ctx) error {
 		ticker := c.Params("ticker")

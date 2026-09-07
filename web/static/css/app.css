@@ -18,7 +18,7 @@
   --sky: #66c2a5;               /* spectral8 teal/sky */
   --radius: 10px;
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --mono: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -60,7 +60,9 @@ a { color: var(--sky); }
 .nav-item {
   color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600;
   padding: 6px 12px; border-radius: 6px; transition: color 0.15s ease, background 0.15s ease;
+  display: inline-flex; align-items: center; gap: 6px;
 }
+.nav-item .nav-icon { width: 15px; height: 15px; flex: none; }
 .nav-item:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
 .nav-item.active { color: var(--text); background: rgba(255, 255, 255, 0.08); border: 1px solid var(--card-border); }
 
@@ -168,7 +170,7 @@ tr.top1 .rank-no { background: var(--primary); color: #ffffff; border: none; }
   background: var(--card); border: 1px solid var(--card-border);
   border-radius: var(--radius); padding: 24px 28px; margin-bottom: 24px;
 }
-.doc-section h2 { margin-top: 0; font-size: 20px; letter-spacing: 0.5px; border-bottom: 1px solid var(--card-border-subtle); padding-bottom: 12px; }
+.doc-section h2 { margin-top: 0; font-size: 20px; letter-spacing: 0.5px;}
 .doc-section h3 { font-size: 15px; margin: 20px 0 8px; color: var(--text); }
 .doc-section p { color: #d4d4d8; line-height: 1.6; font-size: 14px; margin: 8px 0 14px; }
 
@@ -268,4 +270,65 @@ tr.top1 .rank-no { background: var(--primary); color: #ffffff; border: none; }
   table.rank th:nth-child(6), table.rank td:nth-child(6),
   table.rank th:nth-child(7), table.rank td:nth-child(7) { display: none; }
   .company { display: none; }
+}
+
+/* --- Cool Modal & Micro-Animation Enhancements --- */
+.alert-btn-pulse:hover {
+  background: rgba(213, 62, 79, 0.28) !important;
+  border-color: rgba(213, 62, 79, 0.7) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(213, 62, 79, 0.3);
+}
+
+.alert-btn-pulse:hover .bell-icon {
+  animation: bellRing 0.5s ease;
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-15deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-8deg); }
+}
+
+.modal-glow-box {
+  animation: boxGlow 4s ease-in-out infinite alternate;
+}
+
+@keyframes boxGlow {
+  0% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 15px rgba(213, 62, 79, 0.12); }
+  100% { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 25px rgba(213, 62, 79, 0.28); }
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+  transform: rotate(90deg);
+}
+
+.custom-email-input:focus {
+  border-color: #d53e4f !important;
+  box-shadow: 0 0 0 3px rgba(213, 62, 79, 0.25) !important;
+}
+
+.btn-secondary-cool:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+}
+
+.btn-primary-cool:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(213, 62, 79, 0.45) !important;
+}
+
+.btn-primary-cool:active, .btn-secondary-cool:active {
+  transform: translateY(1px);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

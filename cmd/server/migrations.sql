@@ -26,3 +26,23 @@ CREATE INDEX IF NOT EXISTS idx_results_ticker ON ranking_results(ticker);
 CREATE INDEX IF NOT EXISTS idx_results_run ON ranking_results(run_id);
 CREATE INDEX IF NOT EXISTS idx_results_rank ON ranking_results(rank);
 CREATE INDEX IF NOT EXISTS idx_results_calc ON ranking_results(calculated_at);
+
+CREATE TABLE IF NOT EXISTS email_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  notify_gems BOOLEAN DEFAULT 1,
+  notify_guard BOOLEAN DEFAULT 1,
+  notify_sentinel BOOLEAN DEFAULT 1,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS email_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL,
+  type TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  status TEXT NOT NULL,
+  error_msg TEXT,
+  sent_at TEXT NOT NULL
+);

@@ -1,29 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+{{template "head" .}}
 <title>Gem Hunter - Quantitative Methodology</title>
-<link rel="stylesheet" href="/static/css/app.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
-      <span class="gem">◆</span><span>GEM HUNTER<small>QUANT SCREENING</small></span>
-    </a>
-  </div>
-  <nav class="nav-links">
-    <a href="/" class="nav-item">Dashboard</a>
-    <a href="/gemguard" class="nav-item">Gem Guard</a>
-    <a href="/methodology" class="nav-item active">Methodology</a>
-  </nav>
-  <div class="spacer"></div>
-  <span class="pill">Framework: <b>Graham + Lynch Factor Model</b></span>
-</header>
+{{template "header" (hdr "methodology" .)}}
 
 <main class="container">
   <div class="hero">
@@ -362,7 +347,73 @@
     </div>
   </article>
 
-  <div class="disclaimer">Gem Hunter and Gem Guard are quantitative screening research tools and <b>not financial advice, a recommendation to buy or sell securities, or a guarantee of future performance</b>. Always conduct your own comprehensive analysis.</div>
+  <!-- ================================================================ -->
+  <!-- Gem Sentinel: Springate Financial Distress Methodology             -->
+  <!-- ================================================================ -->
+  <div class="hero" id="gem-sentinel" style="margin-top: 36px; margin-bottom: 8px;">
+    <div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <span class="badge badge-warning" style="background:#ef4444; color:#fff;">Gem Sentinel Surveillance</span>
+        <span class="pill" style="padding: 3px 8px; font-size: 11px;">Springate Model (MDA)</span>
+      </div>
+      <h2 style="margin:0; font-size:24px;">HOW GEM SENTINEL DETECTS FINANCIAL DISTRESS &amp; BANKRUPTCY RISK</h2>
+      <p>An automated surveillance module using the Springate Score Model (Multiple Discriminant Analysis / MDA) optimized for the Indonesia Stock Exchange (IDX). Identifies the Top 5 most vulnerable companies. View the live monitor on the <a href="/gemsentinel">Gem Sentinel page</a>.</p>
+    </div>
+  </div>
+
+  <article class="doc-section">
+    <h2>9. Springate Financial Distress Model</h2>
+    <p>The Springate Score is an MDA framework that analyzes 4 key financial ratios to predict corporate financial distress with high historical accuracy in Indonesian public companies:</p>
+    
+    <div class="math-card">
+      \[ \text{Springate Score} = 1.03(X_1) + 3.07(X_2) + 0.66(X_3) + 0.40(X_4) \]
+    </div>
+
+    <div class="table-wrap" style="margin: 14px 0;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Ratio Formula</th>
+            <th>Financial Rationale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>$X_1$</b></td>
+            <td>$\frac{\text{Working Capital}}{\text{Total Assets}}$</td>
+            <td>Measures net liquidity and available working capital cushion relative to asset base.</td>
+          </tr>
+          <tr>
+            <td><b>$X_2$</b></td>
+            <td>$\frac{\text{EBIT}}{\text{Total Assets}}$</td>
+            <td>Measures asset productivity in generating operating profit before debt/tax expenses.</td>
+          </tr>
+          <tr>
+            <td><b>$X_3$</b></td>
+            <td>$\frac{\text{Profit Before Tax (EBT)}}{\text{Current Liabilities}}$</td>
+            <td>Measures the firm's capacity to service short-term liabilities from ongoing earnings.</td>
+          </tr>
+          <tr>
+            <td><b>$X_4$</b></td>
+            <td>$\frac{\text{Revenue}}{\text{Total Assets}}$</td>
+            <td>Measures total asset turnover and revenue generation efficiency.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <strong>Decision Thresholds (Cutoff):</strong>
+      <ul style="margin: 6px 0 0 16px; padding: 0;">
+        <li><b>Score &lt; 0.50:</b> 🔴 <b>Critical Financial Distress</b> (Severe solvency &amp; default risk).</li>
+        <li><b>0.50 &le; Score &lt; 0.862:</b> 🟠 <b>Moderate Financial Distress</b> (Vulnerable to debt &amp; cash flow shocks).</li>
+        <li><b>Score &ge; 0.862:</b> 🟢 <b>Healthy Zone</b> (Financially resilient).</li>
+      </ul>
+    </div>
+  </article>
+
+  <div class="disclaimer">Gem Hunter, Gem Guard, and Gem Sentinel are quantitative screening research tools and <b>not financial advice, a recommendation to buy or sell securities, or a guarantee of future performance</b>. Always conduct your own comprehensive analysis.</div>
   <div class="footer">GEM HUNTER · quantitative methodology specification · Graham + Lynch factor model &amp; Gem Guard anti-manipulation framework · Sectors.app V2 API Integration</div>
 </main>
 </body>

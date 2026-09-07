@@ -1,0 +1,24 @@
+{{define "header"}}
+<header class="topbar">
+  <div class="brand">
+    <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px;">
+      <span class="gem">◆</span><span>GEM HUNTER<small>QUANT SCREENING</small></span>
+    </a>
+  </div>
+  {{template "nav" .Active}}
+  <div class="spacer"></div>
+  {{if eq .Active "dashboard"}}
+  <span class="pill">Last update: <b>{{.Data.Run.CalculatedAt}} WIB</b></span>
+  <span class="pill">Next update: <b>{{.Data.NextUpdate}} WIB</b></span>
+  {{else if eq .Active "gemguard"}}
+  <span class="pill">Surveillance: <b>PIR & UMA Detection</b></span>
+  {{else if eq .Active "gemsentinel"}}
+  <span class="pill">Surveillance: <b>Springate Bankruptcy Distress</b></span>
+  {{else if eq .Active "methodology"}}
+  <span class="pill">Framework: <b>Graham + Lynch Factor Model</b></span>
+  {{else if eq .Active "proof"}}
+  <span class="pill">Proof: <b>5-Year Market Validation</b></span>
+  {{end}}
+  {{template "modal_email" .}}
+</header>
+{{end}}
