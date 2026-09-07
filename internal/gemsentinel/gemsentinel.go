@@ -112,33 +112,33 @@ func ComputeSpringateScore(snapshot *domain.Snapshot) domain.SpringateAnalysis {
 // IdentifyPrimaryVulnerability determines the most vulnerable Springate ratio.
 func IdentifyPrimaryVulnerability(analysis domain.SpringateAnalysis) string {
 	if analysis.X1 < 0 && analysis.X2 < 0 {
-		return "Defisit Modal Kerja & Rugi Operasional"
+		return "Working Capital Deficit & Operating Loss"
 	}
 	if analysis.X1 < 0 {
-		return "Modal Kerja Negatif (Working Capital Deficit)"
+		return "Working Capital Deficit"
 	}
 	if analysis.X2 < 0 {
-		return "Rugi Operasional (EBIT Deficit)"
+		return "Operating Loss (EBIT Deficit)"
 	}
 	if analysis.X3 < 0 {
-		return "Kemampuan Menutup Utang Lancar Rendah"
+		return "Low Ability to Cover Current Liabilities"
 	}
 	if analysis.X4 < 0.20 {
-		return "Efisiensi Perputaran Aset Rendah (Low Asset Turnover)"
+		return "Low Asset Turnover Efficiency"
 	}
-	return "Rasio Margin & Likuiditas Menurun"
+	return "Declining Margin & Liquidity Ratios"
 }
 
 // GenerateSentinelSummary produces deterministic AI analysis for Gem Sentinel distress stocks.
 func GenerateSentinelSummary(stock domain.SentinelStock) string {
 	sp := stock.Springate
 	if sp.Score < 0.50 {
-		return fmt.Sprintf("Emiten terindikasi Critical Financial Distress (Skor Springate: %.2f < 0.50). Tekanan utama pada %s dengan modal kerja (X1=%.2f) dan laba operasi (X2=%.2f) yang sangat tertekan.",
+		return fmt.Sprintf("Issuer flagged as Critical Financial Distress (Springate Score: %.2f < 0.50). Pressure is driven mainly by %s, with heavily stressed working capital (X1=%.2f) and operating profit (X2=%.2f).",
 			sp.Score, stock.PrimaryVulnerability, sp.X1, sp.X2)
 	}
 	if sp.Score < 0.862 {
-		return fmt.Sprintf("Emiten berada di zona Moderate Financial Distress (Skor Springate: %.2f < 0.862). Kewajiban jangka pendek (X3=%.2f) menekan solvabilitas dan memerlukan pemantauan ketat.",
+		return fmt.Sprintf("Issuer sits in the Moderate Financial Distress zone (Springate Score: %.2f < 0.862). Short-term liabilities (X3=%.2f) pressure solvency and warrant close monitoring.",
 			sp.Score, sp.X3)
 	}
-	return fmt.Sprintf("Emiten dalam kondisi finansial relatif sehat (Skor Springate: %.2f >= 0.862).", sp.Score)
+	return fmt.Sprintf("Issuer shows relatively sound financial condition (Springate Score: %.2f >= 0.862).", sp.Score)
 }

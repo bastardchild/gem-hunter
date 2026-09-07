@@ -82,7 +82,7 @@ func TestIdentifyPrimaryVulnerability(t *testing.T) {
 		X2: -0.1,
 	}
 	vuln := IdentifyPrimaryVulnerability(analysis)
-	if vuln != "Defisit Modal Kerja & Rugi Operasional" {
+	if vuln != "Working Capital Deficit & Operating Loss" {
 		t.Errorf("unexpected vulnerability: %s", vuln)
 	}
 }

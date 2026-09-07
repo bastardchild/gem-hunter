@@ -10,6 +10,7 @@ Strict Rules:
 - Always include: Summary, Strengths, Risks, Why-it-ranked, Confidence (0-100), and Missing data.
 - If a breakdown component is N/A (e.g. bank DER / PB), state "N/A (financial profile)" instead of treating it as an operational weakness.
 - If data is stale (stale flag set), prefix output with "⚠ Data may be stale".
+- Respond entirely in English. Do not translate output into Indonesian or any other language.
 `
 
 // Deterministic templates for Phase A engine fallback (zero cost, 100% reproducible).
@@ -26,4 +27,5 @@ Strict Rules:
 - Explain the root cause of financial distress based on the 4 Springate ratios (Working Capital/Total Assets, EBIT/Total Assets, EBT/Current Liabilities, Revenue/Total Assets).
 - Provide a concise 2-sentence qualitative synthesis of the primary risk factor and actionable surveillance warning.
 - Use objective risk surveillance terminology ("Financial Distress Risk", "Working Capital Deficit", "Liquidity Vulnerability"). NEVER provide direct investment advice or guarantee bankruptcy.
+- Respond entirely in English. Do not translate output into Indonesian or any other language.
 `

@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,8 +15,10 @@ import (
 
 	"gemhunter/internal/ai"
 	"gemhunter/internal/config"
+	"gemhunter/internal/domain"
 	"gemhunter/internal/gemguard"
 	"gemhunter/internal/notifier"
+	"gemhunter/internal/provider/sectors"
 	"gemhunter/internal/repository"
 	"gemhunter/internal/service"
 	"gemhunter/web"
@@ -39,16 +43,67 @@ func main() {
 	}
 	defer store.Close()
 
+	var sectorsCache *sectors.Cache
+	if s, err := sectors.NewCache(store.DB()); err != nil {
+		log.Printf(`{"level":"warn","event":"sectors_cache_init","error":%q}`, err.Error())
+	} else {
+		sectorsCache = s
+	}
+
+	sectorsClient := sectors.New(cfg.SectorsBaseURL, cfg.SectorsAPIKey)
+	llm := ai.NewLLMClient(cfg.LLMBaseURL, cfg.LLMAPIKey, cfg.LLMModel)
+
 	aiAgent := ai.NewAgent(store)
+	if cfg.LLMEnabled && llm.Available() {
+		aiAgent.SetLLMClient(llm)
+		log.Printf(`{"level":"info","event":"llm_enabled","model":%q}`, cfg.LLMModel)
+	} else {
+		log.Printf(`{"level":"info","event":"llm_disabled"}`)
+	}
+	if cfg.LiveSectorsEnabled {
+		log.Printf(`{"level":"info","event":"sectors_live_enabled","ttl_h":%d,"max_stocks":%d}`, cfg.CacheTTLHours, cfg.UniverseMaxStocks)
+	} else {
+		log.Printf(`{"level":"info","event":"sectors_mock_mode"}`)
+	}
 	aiWorker := ai.NewWorker(aiAgent)
 	aiWorker.Start(context.Background())
 	defer aiWorker.Stop()
 
 	mailer := notifier.New(cfg, store)
 
+	var liveSnaps []domain.Snapshot
+	var liveMu sync.RWMutex
+
+	refreshLive := func() {
+		if !cfg.LiveSectorsEnabled || sectorsCache == nil {
+			return
+		}
+		ctx := context.Background()
+		snaps, err := sectorsClient.FetchLiveUniverse(ctx, sectorsCache, cfg.UniverseMinMarketCap, cfg.UniverseMaxStocks, cfg.CacheTTLHours)
+		if err != nil {
+			log.Printf(`{"level":"warn","event":"sectors_refresh_fail","error":%q}`, err.Error())
+			return
+		}
+		liveMu.Lock()
+		liveSnaps = snaps
+		liveMu.Unlock()
+		log.Printf(`{"level":"info","event":"sectors_refresh_done","count":%d}`, len(snaps))
+	}
+	refreshLive()
+
+	currentSnaps := func() []domain.Snapshot {
+		liveMu.RLock()
+		snaps := liveSnaps
+		liveMu.RUnlock()
+		if len(snaps) > 0 {
+			return snaps
+		}
+		return service.MockUniverse()
+	}
+
 	run := func() service.RunResult {
 		nowWIB := time.Now().In(wib)
-		r := service.Rank(service.MockUniverse(), nowWIB, cfg.MaxDataAgeHours, cfg.MinEPSGrowth)
+		r := service.Rank(currentSnaps(), nowWIB, cfg.MaxDataAgeHours, cfg.MinEPSGrowth)
 		r.RunID = uuid.NewString()
 		r.CalculatedAt = nowWIB.Format("2006-01-02 15:04")
 		r.DataAsOf = nowWIB.Format("2006-01-02 15:04")
@@ -63,7 +118,7 @@ func main() {
 			context.Background(),
 			r,
 			defaultGemGuardSurveillance(),
-			service.GetTop5SpringateDistress(service.MockUniverse()),
+			service.GetTop5SpringateDistress(currentSnaps()),
 		)
 
 		return r
@@ -76,6 +131,7 @@ func main() {
 			sleepDur := time.Until(next)
 			log.Printf(`{"level":"info","event":"scheduler_sleep","next_slot":%q,"duration":%q}`, next.Format("2006-01-02 15:04 WIB"), sleepDur.String())
 			time.Sleep(sleepDur)
+			refreshLive()
 			run()
 		}
 	}()
@@ -104,12 +160,30 @@ func main() {
 	app.Get("/ranking", func(c *fiber.Ctx) error { return c.JSON(mustLatest(store, cfg, run)) })
 	app.Get("/stocks", func(c *fiber.Ctx) error { return c.JSON(mustLatest(store, cfg, run).Stocks) })
 	app.Get("/stocks/:ticker", func(c *fiber.Ctx) error {
+		ticker := strings.ToUpper(c.Params("ticker"))
+		if !strings.HasSuffix(ticker, ".JK") {
+			ticker += ".JK"
+		}
+
 		r := mustLatest(store, cfg, run)
 		for _, s := range r.Stocks {
-			if s.Ticker == c.Params("ticker") {
+			if strings.EqualFold(s.Ticker, ticker) {
 				return c.JSON(s)
 			}
 		}
+
+		if cfg.LiveSectorsEnabled && sectorsCache != nil {
+			snap, _, fetchErr := sectorsClient.FetchSnapshotWithCache(c.Context(), sectorsCache, ticker, cfg.CacheTTLHours)
+			if fetchErr != nil {
+				return c.Status(404).JSON(fiber.Map{"error": "not found: " + fetchErr.Error()})
+			}
+			ranked := service.Rank([]domain.Snapshot{snap}, time.Now().In(wib), cfg.MaxDataAgeHours, cfg.MinEPSGrowth)
+			if len(ranked.Stocks) > 0 {
+				return c.JSON(ranked.Stocks[0])
+			}
+			return c.Status(204).JSON(fiber.Map{"error": "no ranking data for ticker", "ticker": ticker})
+		}
+
 		return c.Status(404).JSON(fiber.Map{"error": "not found"})
 	})
 	app.Post("/admin/ranking/run", func(c *fiber.Ctx) error {
@@ -152,7 +226,7 @@ func main() {
 		return c.JSON(stocks)
 	})
 	app.Get("/gemsentinel", func(c *fiber.Ctx) error {
-		stocks := service.GetTop5SpringateDistress(service.MockUniverse())
+		stocks := service.GetTop5SpringateDistress(currentSnaps())
 		html, err := renderGemSentinel(stocks)
 		if err != nil {
 			return fiber.NewError(500, err.Error())
@@ -160,7 +234,7 @@ func main() {
 		return c.Type("html").SendString(html)
 	})
 	app.Get("/api/v1/gemsentinel", func(c *fiber.Ctx) error {
-		stocks := service.GetTop5SpringateDistress(service.MockUniverse())
+		stocks := service.GetTop5SpringateDistress(currentSnaps())
 		return c.JSON(stocks)
 	})
 	app.Post("/api/v1/subscribe", func(c *fiber.Ctx) error {
@@ -233,7 +307,22 @@ func fallbackConfig() config.Config {
 	if dbPath == "" {
 		dbPath = "data/gemhunter.db"
 	}
-	return config.Config{Env: getenvDefault("APP_ENV", "development"), DBPath: dbPath, RankingIntervalHours: 6, MaxDataAgeHours: 168, AdminToken: os.Getenv("ADMIN_TOKEN")}
+	return config.Config{
+		Env:          getenvDefault("APP_ENV", "development"),
+		DBPath:       dbPath,
+		RankingIntervalHours: 6,
+		MaxDataAgeHours:      168,
+		AdminToken:           os.Getenv("ADMIN_TOKEN"),
+		LLMProvider:          getenvDefault("LLM_DEFAULT_PROVIDER", "openai"),
+		LLMModel:             getenvDefault("LLM_DEFAULT_MODEL", "gpt-4o-mini"),
+		LLMAPIKey:            os.Getenv("OPENAI_COMPATIBLE_API_KEY"),
+		LLMBaseURL:           getenvDefault("OPENAI_COMPATIBLE_BASE_URL", "https://api.openai.com/v1"),
+		LLMEnabled:           false,
+		LiveSectorsEnabled:   false,
+		UniverseMinMarketCap: 50000000000000,
+		UniverseMaxStocks:    20,
+		CacheTTLHours:        168,
+	}
 }
 
 func getenvDefault(key, def string) string {

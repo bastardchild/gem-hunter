@@ -51,6 +51,10 @@ func (s *Store) Close() error {
 	return nil
 }
 
+func (s *Store) DB() *sql.DB {
+	return s.db
+}
+
 func f64(p *float64) sql.NullFloat64 {
 	if p == nil {
 		return sql.NullFloat64{}

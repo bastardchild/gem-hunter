@@ -216,48 +216,87 @@ func MapReport(r reportEnvelope) domain.Snapshot {
 		}
 	}
 	if len(years) > 0 {
-		cur := m[years[0]]
-		if cur.eps != nil {
-			s.EPS = cur.eps
-		}
-		if cur.pe != nil {
-			s.PE = cur.pe
-		}
-		if cur.pb != nil {
-			s.PB = cur.pb
-		}
-		if cur.eq != nil && cur.sh != nil && *cur.sh > 0 {
-			s.BVPS = fptr(*cur.eq / *cur.sh)
-		}
-		if cur.rev != nil {
-			s.Revenue = cur.rev
-		}
-		if cur.wc != nil {
-			s.WorkingCapital = cur.wc
-		}
-		if cur.ta != nil {
-			s.TotalAssets = cur.ta
-		}
-		if cur.ebit != nil {
-			s.EBIT = cur.ebit
-		}
-		if cur.ebt != nil {
-			s.ProfitBeforeTax = cur.ebt
-		}
-		if cur.cl != nil {
-			s.CurrentLiabilities = cur.cl
-		}
-		if len(years) > 1 {
-			prv := m[years[1]]
-			if prv.eps != nil {
-				s.PrevEPS = prv.eps
+		// Pilih tahun fundamental (dari HistFin) paling baru yang punya data finance.
+		// Catatan: Valuation.Historical punya tahun "forward" (mis. 2026) yang
+		// tidak punya baris di historical_financials; jangan dipakai utk field finance.
+		curFin := m[years[0]]
+		for _, y := range years {
+			if m[y].rev != nil || m[y].ta != nil || m[y].eq != nil {
+				curFin = m[y]
+				break
 			}
-			if prv.rev != nil {
-				s.PrevRevenue = prv.rev
-			}
-			s.PeriodEnd = time.Date(years[0], 12, 31, 0, 0, 0, 0, time.UTC)
-			s.PublishedAt = s.PeriodEnd
 		}
+		if curFin.eps != nil {
+			s.EPS = curFin.eps
+		}
+		if curFin.eq != nil && curFin.sh != nil && *curFin.sh > 0 {
+			s.BVPS = fptr(*curFin.eq / *curFin.sh)
+		}
+		if curFin.rev != nil {
+			s.Revenue = curFin.rev
+		}
+		if curFin.wc != nil {
+			s.WorkingCapital = curFin.wc
+		}
+		if curFin.ta != nil {
+			s.TotalAssets = curFin.ta
+		}
+		if curFin.ebit != nil {
+			s.EBIT = curFin.ebit
+		}
+		if curFin.ebt != nil {
+			s.ProfitBeforeTax = curFin.ebt
+		}
+		if curFin.cl != nil {
+			s.CurrentLiabilities = curFin.cl
+		}
+		// Tahun fundamental terbaru (untuk PE/PB konsisten dengan field finance)
+		finYear := curFin.y
+		// Cari data finansial musim terakhir; ambil prv dari tahun dibawahnya
+		var curVal *yr
+		var prvFin *yr
+		sortedYears := make([]int, 0, len(m))
+		for y := range m {
+			sortedYears = append(sortedYears, y)
+		}
+		sortIntsDesc(sortedYears)
+		for _, y := range sortedYears {
+			if y <= finYear && m[y].pe != nil {
+				curVal = m[y]
+				break
+			}
+		}
+		// PrevEPS/PrevRevenue dari tahun fundamental sebelumnya
+		for _, y := range sortedYears {
+			if y < finYear && m[y].eps != nil && prvFin == nil {
+				prvFin = m[y]
+				break
+			}
+		}
+		if curVal != nil && curVal.pe != nil {
+			s.PE = curVal.pe
+		}
+		if curVal != nil && curVal.pb != nil {
+			s.PB = curVal.pb
+		}
+		if prvFin != nil && prvFin.eps != nil {
+			s.PrevEPS = prvFin.eps
+		}
+		if prvFin != nil && prvFin.rev != nil {
+			s.PrevRevenue = prvFin.rev
+		}
+		s.PeriodEnd = time.Date(finYear, 12, 31, 0, 0, 0, 0, time.UTC)
+		s.PublishedAt = s.PeriodEnd
 	}
 	return s
+}
+
+func sortIntsDesc(a []int) {
+	for i := 0; i < len(a); i++ {
+		for j := i + 1; j < len(a); j++ {
+			if a[j] > a[i] {
+				a[i], a[j] = a[j], a[i]
+			}
+		}
+	}
 }

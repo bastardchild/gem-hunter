@@ -36,6 +36,14 @@ func NewAgent(store *repository.Store) *Agent {
 	}
 }
 
+func (a *Agent) SetLLMClient(llm *LLMClient) {
+	if a.analyst != nil {
+		if impl, ok := a.analyst.(*analystImpl); ok {
+			impl.llm = llm
+		}
+	}
+}
+
 // ProcessRun runs the complete AI analysis pipeline for a quant run result asynchronously.
 func (a *Agent) ProcessRun(ctx context.Context, r service.RunResult) (*RunAnalyses, error) {
 	runAnalyses := &RunAnalyses{
