@@ -62,10 +62,8 @@ Instead of relying on opinions, the platform:
 | **Test Email** | One-click SMTP connectivity verification from the UI |
 | **5-Year Proof** | Historical validation page: five real stocks that passed the screen in 2020 and their verified gains (Yahoo Finance public data) |
 | **Bank-Aware Scoring** | Automatic renormalization for financial-sector issuers (missing DER/PB handled gracefully) |
-| **Zero-Cost Fallback** | Fully functional deterministic AI fallback (no LLM key needed); mock universe when `SECTORS_API_KEY` is absent |
 | **Production Database** | SQLite (WAL) with Litestream replication profile for disaster recovery |
 | **HTMX Live Updates** | Rankings table auto-refreshes every 60s without full page reloads |
-| **Modern Animations** | Spring-scale modal, backdrop blur transitions, bell-shake micro-interactions, ambient glow |
 
 ---
 
