@@ -203,13 +203,13 @@
   <!-- ================================================================ -->
   <!-- Gem Guard: Anti-Manipulation & UMA Detection Methodology          -->
   <!-- ================================================================ -->
-  <div class="hero" id="gem-guard" style="margin-top: 36px; margin-bottom: 8px;">
+  <div class="hero hero-anchor" id="gem-guard">
     <div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+      <div class="heading-row">
         <span class="badge badge-warning">Gem Guard Surveillance</span>
-        <span class="pill" style="padding: 3px 8px; font-size: 11px;">Anti-Manipulation & UMA</span>
+        <span class="pill pill-sm">Anti-Manipulation & UMA</span>
       </div>
-      <h2 style="margin:0; font-size:24px;">HOW GEM GUARD DETECTS MARKET MANIPULATION &amp; UMA</h2>
+      <h2 class="section-h2">HOW GEM GUARD DETECTS MARKET MANIPULATION &amp; UMA</h2>
       <p>A complementary, security-focused methodology that screens the same universe for manipulation risk: High Share Concentration (HSC), Unusual Market Activity (UMA) spikes, and pump-and-dump patterns. Returns to the live monitor on the <a href="/gemguard">Gem Guard page</a>.</p>
     </div>
   </div>
@@ -299,7 +299,7 @@
       </div>
     </div>
 
-    <div class="card-box" style="margin-top: 16px;">
+    <div class="card-box card-box-gap">
       <h3>Ground Truth Event Labeling</h3>
       <div class="math-card">
         \[ Label_t = \begin{cases} 1 & \text{if } t \in [UMA\_date - 5,\ UMA\_date + 5] \\ 0 & \text{otherwise} \end{cases} \]
@@ -313,7 +313,7 @@
     <h2>8. Classifier Benchmarks &amp; Imbalance Handling (SMOTE)</h2>
     <p>Because verified market manipulation cases on the IDX constitute roughly 2.8% of aggregate trading days, a naive classifier would simply predict "normal" almost every time and appear highly accurate while missing all manipulation. Gem Guard addresses this with <b>SMOTE (Synthetic Minority Oversampling Technique)</b>, generating synthetic examples of the rare manipulation class during training so the model learns to recognize it.</p>
 
-    <div class="table-wrap" style="margin: 14px 0;">
+    <div class="table-wrap table-gap">
       <table class="table">
         <thead>
           <tr>
@@ -350,13 +350,13 @@
   <!-- ================================================================ -->
   <!-- Gem Sentinel: Springate Financial Distress Methodology             -->
   <!-- ================================================================ -->
-  <div class="hero" id="gem-sentinel" style="margin-top: 36px; margin-bottom: 8px;">
+  <div class="hero hero-anchor" id="gem-sentinel">
     <div>
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-        <span class="badge badge-warning" style="background:#ef4444; color:#fff;">Gem Sentinel Surveillance</span>
-        <span class="pill" style="padding: 3px 8px; font-size: 11px;">Springate Model (MDA)</span>
+      <div class="heading-row">
+        <span class="badge badge-warning badge-sentinel">Gem Sentinel Surveillance</span>
+        <span class="pill pill-sm">Springate Model (MDA)</span>
       </div>
-      <h2 style="margin:0; font-size:24px;">HOW GEM SENTINEL DETECTS FINANCIAL DISTRESS &amp; BANKRUPTCY RISK</h2>
+      <h2 class="section-h2">HOW GEM SENTINEL DETECTS FINANCIAL DISTRESS &amp; BANKRUPTCY RISK</h2>
       <p>An automated surveillance module using the Springate Score Model (Multiple Discriminant Analysis / MDA) optimized for the Indonesia Stock Exchange (IDX). Identifies the Top 5 most vulnerable companies. View the live monitor on the <a href="/gemsentinel">Gem Sentinel page</a>.</p>
     </div>
   </div>
@@ -369,7 +369,7 @@
       \[ \text{Springate Score} = 1.03(X_1) + 3.07(X_2) + 0.66(X_3) + 0.40(X_4) \]
     </div>
 
-    <div class="table-wrap" style="margin: 14px 0;">
+    <div class="table-wrap table-gap">
       <table class="table">
         <thead>
           <tr>
@@ -405,7 +405,7 @@
 
     <div class="callout">
       <strong>Decision Thresholds (Cutoff):</strong>
-      <ul style="margin: 6px 0 0 16px; padding: 0;">
+      <ul class="callout-list">
         <li><b>Score &lt; 0.50:</b> 🔴 <b>Critical Financial Distress</b> (Severe solvency &amp; default risk).</li>
         <li><b>0.50 &le; Score &lt; 0.862:</b> 🟠 <b>Moderate Financial Distress</b> (Vulnerable to debt &amp; cash flow shocks).</li>
         <li><b>Score &ge; 0.862:</b> 🟢 <b>Healthy Zone</b> (Financially resilient).</li>

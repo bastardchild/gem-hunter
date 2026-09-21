@@ -243,7 +243,7 @@ The application creates and migrates the SQLite database at `SQLITE_PATH` on sta
 docker compose --profile replication up -d
 ```
 
-This starts Litestream replication alongside the app and Redis services. Configure the destination in `litestream.yml` before using it in production.
+This starts Litestream replication alongside the app and Redis services. Copy `litestream-example.yml` to `litestream.yml` (gitignored) and set the replica destination before using it in production.
 
 ## Screens and API
 

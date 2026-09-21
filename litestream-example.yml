@@ -1,0 +1,16 @@
+# Copy to litestream.yml (gitignored). Do not put secrets in this file.
+# Enable: docker compose --profile replication up -d
+#
+# ${VAR} is expanded by Litestream inside its container, not by Compose from .env.
+# The litestream service has no env_file — inject AWS_* / LITESTREAM_* there,
+# or omit keys and let Litestream auto-read AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY.
+
+dbs: []
+
+# S3 example (uncomment and set bucket). Prefer env credentials over keys in YAML:
+# dbs:
+#   - path: /data/gemhunter.db
+#     replicas:
+#       - url: s3://YOUR_BUCKET/gemhunter
+#         access-key-id: ${AWS_ACCESS_KEY_ID}
+#         secret-access-key: ${AWS_SECRET_ACCESS_KEY}

@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"gemhunter/internal/gemguard"
+	"gemhunter/internal/ai"
 	"gemhunter/internal/domain"
+	"gemhunter/internal/gemguard"
 	"gemhunter/internal/service"
 	"gemhunter/web"
 )
@@ -44,9 +45,16 @@ var tmpl = template.Must(template.New("").Funcs(template.FuncMap{
 	},
 }).ParseFS(web.FS, "templates/*.html"))
 
+type RankedRow struct {
+	service.RankedStock
+	WhyRanked     string
+	AnalysisReady bool
+}
+
 // DashboardData is the view-model for the dashboard page.
 type DashboardData struct {
 	Run        service.RunResult
+	Rows       []RankedRow
 	NextUpdate string
 	Interval   int
 }
@@ -65,19 +73,39 @@ func nextScheduleSlot(now time.Time) time.Time {
 	return time.Date(nowWIB.Year(), nowWIB.Month(), nowWIB.Day()+1, 0, 0, 0, 0, wib)
 }
 
-func dashboardData(r service.RunResult, intervalHours int) DashboardData {
+func rankedRows(stocks []service.RankedStock, agent *ai.Agent) []RankedRow {
+	rows := make([]RankedRow, 0, len(stocks))
+	for _, s := range stocks {
+		row := RankedRow{RankedStock: s}
+		if agent != nil {
+			if an, ok := agent.GetAnalysis(s.Ticker); ok && an != nil && an.WhyRanked != "" {
+				row.WhyRanked = an.WhyRanked
+				row.AnalysisReady = true
+			}
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func dashboardData(r service.RunResult, intervalHours int, agent *ai.Agent) DashboardData {
 	next := ""
 	if t, err := time.ParseInLocation("2006-01-02 15:04", r.CalculatedAt, wib); err == nil {
 		next = nextScheduleSlot(t).Format("15:04")
 	} else {
 		next = nextScheduleSlot(time.Now()).Format("15:04")
 	}
-	return DashboardData{Run: r, NextUpdate: next, Interval: intervalHours}
+	return DashboardData{
+		Run:        r,
+		Rows:       rankedRows(r.Stocks, agent),
+		NextUpdate: next,
+		Interval:   intervalHours,
+	}
 }
 
-func renderDashboard(r service.RunResult, intervalHours int) (string, error) {
+func renderDashboard(r service.RunResult, intervalHours int, agent *ai.Agent) (string, error) {
 	var b bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&b, "dashboard.html", dashboardData(r, intervalHours)); err != nil {
+	if err := tmpl.ExecuteTemplate(&b, "dashboard.html", dashboardData(r, intervalHours, agent)); err != nil {
 		return "", err
 	}
 	return b.String(), nil
@@ -141,9 +169,9 @@ func renderGemSentinel(stocks []domain.SentinelStock) (string, error) {
 	return b.String(), nil
 }
 
-func renderRows(stocks []service.RankedStock) (string, error) {
+func renderRows(stocks []service.RankedStock, agent *ai.Agent) (string, error) {
 	var b bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&b, "rows", stocks); err != nil {
+	if err := tmpl.ExecuteTemplate(&b, "rows", rankedRows(stocks, agent)); err != nil {
 		return "", err
 	}
 	return b.String(), nil

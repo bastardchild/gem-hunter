@@ -104,13 +104,19 @@ func Rank(snaps []domain.Snapshot, now time.Time, maxAgeH int, minEPSg float64) 
 		}
 		return out
 	}
+	ptrVal := func(p *float64) (float64, bool) {
+		if p == nil {
+			return 0, false
+		}
+		return *p, true
+	}
 	mosV := collect(func(m mid) (float64, bool) { return m.mos, true })
-	peV := collect(func(m mid) (float64, bool) { return *m.pe, true })
-	pbV := collect(func(m mid) (float64, bool) { return *m.pb, m.pb != nil })
-	epsV := collect(func(m mid) (float64, bool) { return *m.epsG, true })
-	revV := collect(func(m mid) (float64, bool) { return *m.revG, m.revG != nil })
-	pegV := collect(func(m mid) (float64, bool) { return *m.peg, true })
-	roeV := collect(func(m mid) (float64, bool) { return *m.roe, m.roe != nil })
+	peV := collect(func(m mid) (float64, bool) { return ptrVal(m.pe) })
+	pbV := collect(func(m mid) (float64, bool) { return ptrVal(m.pb) })
+	epsV := collect(func(m mid) (float64, bool) { return ptrVal(m.epsG) })
+	revV := collect(func(m mid) (float64, bool) { return ptrVal(m.revG) })
+	pegV := collect(func(m mid) (float64, bool) { return ptrVal(m.peg) })
+	roeV := collect(func(m mid) (float64, bool) { return ptrVal(m.roe) })
 
 	out := []RankedStock{}
 	for _, m := range mids {

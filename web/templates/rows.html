@@ -1,9 +1,26 @@
 {{define "rows"}}{{range .}}
 <tr class="row{{if eq .Rank 1}} top1{{end}}" x-show="'{{.Ticker}} {{.CompanyName}}'.toLowerCase().includes(search.toLowerCase())" x-on:click="openRow = (openRow === '{{.Ticker}}' ? '' : '{{.Ticker}}')">
   <td><span class="rank-no">{{.Rank}}</span></td>
-  <td><span class="ticker">{{.Ticker}}</span><div class="company">{{.CompanyName}} · {{.Sector}}</div></td>
+  <td>
+    <div class="ticker-wrap"
+         @mouseenter="openTip = '{{.Ticker}}'"
+         @mouseleave="openTip = ''"
+         @click.stop="openTip = (openTip === '{{.Ticker}}' ? '' : '{{.Ticker}}')">
+      <span class="ticker">{{.Ticker}}</span>
+      <div class="company">{{.CompanyName}} · {{.Sector}}</div>
+      <div class="why-pop" x-show="openTip === '{{.Ticker}}'" x-cloak x-transition.opacity.duration.200ms @click.stop>
+        {{if .AnalysisReady}}
+        <div class="why-pop-k">Why it ranked</div>
+        <div class="why-pop-v">{{.WhyRanked}}</div>
+        {{else}}
+        <div class="why-pop-v muted">Analysis pending…</div>
+        {{end}}
+        <div class="why-pop-hint">screening explanation · not advice</div>
+      </div>
+    </div>
+  </td>
   <td class="num">{{rp .Price}}</td>
-  <td class="num">{{r2 .GLScore}}<div class="bar"><span style="width:{{pctW .GLScore}}%"></span></div></td>
+   <td class="num">{{r2 .GLScore}}<div class="bar"><span style="--bar:{{pctW .GLScore}}%"></span></div></td>
   <td class="num">{{r2 .GrahamScore}}</td>
   <td class="num">{{r2 .LynchScore}}</td>
   <td class="num">{{pct .MarginOfSafety}}</td>
@@ -24,7 +41,7 @@
       <div class="metric"><div class="k">ROE</div><div class="v">{{pctPtr .ROE}}</div></div>
       <div class="metric"><div class="k">Data Date</div><div class="v">{{.DataDate}}</div></div>
     </div>
-    <div class="hint" style="margin-top:8px">Score breakdowns represent relative percentile ranks across the eligible universe for this run, not absolute valuations.</div>
+    <div class="hint hint-after">Score breakdowns represent relative percentile ranks across the eligible universe for this run, not absolute valuations.</div>
   </td>
 </tr>
 {{end}}{{end}}

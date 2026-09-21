@@ -12,7 +12,7 @@
     <div>
       <h1>PROVEN BY THE PAST: 5 YEARS OF REAL MARKET DATA</h1>
       <p>Not theory. Five stocks that passed the Graham-Lynch screen when they were cheap and what happened over the next five years. Prices from Yahoo Finance (<code>query2.finance.yahoo.com/v8/finance/chart</code>), fundamentals from audited annual reports. Period: <b>2 Jan 2020 to 7 Sep 2026</b>. All gains are price-only, before dividends and costs.</p>
-      <div class="callout" style="margin-top:14px">Method in one line: <code>GrahamValue = sqrt(22.5 * EPS * BVPS)</code> to <code>MoS = 1 - Price/GrahamValue</code> to <code>PEG = PE / (EPSgrowth*100)</code> to percentile-ranked GrahamScore + LynchScore to <code>GL = 0.55*Graham + 0.45*Lynch</code>. See full math on <a href="/methodology">Methodology</a>.</div>
+      <div class="callout callout-mt">Method in one line: <code>GrahamValue = sqrt(22.5 * EPS * BVPS)</code> to <code>MoS = 1 - Price/GrahamValue</code> to <code>PEG = PE / (EPSgrowth*100)</code> to percentile-ranked GrahamScore + LynchScore to <code>GL = 0.55*Graham + 0.45*Lynch</code>. See full math on <a href="/methodology">Methodology</a>.</div>
     </div>
   </div>
 
@@ -24,10 +24,10 @@
 
   <!-- BRIS -->
   <article class="doc-section">
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="proof-head">
       <span class="badge badge-warning">01</span>
-      <h2 style="margin:0">BRIS - Bank Syariah Indonesia</h2>
-      <span class="pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #22c55e; font-weight: 700;">Financials - +448% in 5 years</span>
+      <h2>BRIS - Bank Syariah Indonesia</h2>
+      <span class="pill pill-gain">Financials - +448% in 5 years</span>
     </div>
     <p><b>Period:</b> Rp 323 on 2 Jan 2020 to Rp 1,775 on 7 Sep 2026. <b>Gain +448.2%</b>, roughly 4.5 times the initial capital, before dividends.</p>
     <p><b>Why the formula liked it:</b> In early 2020 BRIS (post-merger) showed EPS growth above 70% year over year while its PE was still around 18, giving a PEG near 0.25, very low for a bank. GrahamValue from <code>EPS * BVPS</code> left a Margin of Safety around 32%, so the Graham shield saw value and the Lynch engine saw growth at a fair price. For banks the model forgives missing <code>PB/ROE</code> with a neutral 50 (<code>ranking.go:119</code>), so the score was driven by what mattered: cheap growth.</p>
@@ -36,10 +36,10 @@
 
   <!-- ANTM -->
   <article class="doc-section">
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="proof-head">
       <span class="badge badge-warning">02</span>
-      <h2 style="margin:0">ANTM - Aneka Tambang</h2>
-      <span class="pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #22c55e; font-weight: 700;">Materials - +266.7%</span>
+      <h2>ANTM - Aneka Tambang</h2>
+      <span class="pill pill-gain">Materials - +266.7%</span>
     </div>
     <p><b>Period:</b> Rp 840 to Rp 3,080. <b>Gain +266.7%</b>, nearly tripling in five years.</p>
     <p><b>Why the formula liked it:</b> ANTM entered 2020 with a PB around 0.9 and steady EPS growth near 15 to 20%. That gave a double lift: the Graham side rewarded the low PB and a Margin of Safety above 40%, while the Lynch side rewarded the revenue growth percentile. Together they pushed the GL above 79, firmly in the Attractive band.</p>
@@ -48,10 +48,10 @@
 
   <!-- HRUM -->
   <article class="doc-section">
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="proof-head">
       <span class="badge badge-warning">03</span>
-      <h2 style="margin:0">HRUM - Harum Energy</h2>
-      <span class="pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #22c55e; font-weight: 700;">Energy - +258.0%</span>
+      <h2>HRUM - Harum Energy</h2>
+      <span class="pill pill-gain">Energy - +258.0%</span>
     </div>
     <p><b>Period:</b> Rp 264 to Rp 945. <b>Gain +258.0%</b>.</p>
     <p><b>Why the formula liked it:</b> HRUM was the cheapest energy name on a PE basis in early 2020, around 7.5, paired with ROE near 14%. That put it in the 95th percentile for PE and kept its PEG near 0.18, growth was not being charged at all. The composite GL near 84 put it in the Strong band even before the coal rally.</p>
@@ -60,10 +60,10 @@
 
   <!-- ESSA -->
   <article class="doc-section">
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="proof-head">
       <span class="badge badge-warning">04</span>
-      <h2 style="margin:0">ESSA - ESSA Industries</h2>
-      <span class="pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #22c55e; font-weight: 700;">Materials - +157.5%</span>
+      <h2>ESSA - ESSA Industries</h2>
+      <span class="pill pill-gain">Materials - +157.5%</span>
     </div>
     <p><b>Period:</b> Rp 266 to Rp 685. <b>Gain +157.5%</b>.</p>
     <p><b>Why the formula liked it:</b> ESSA was not the cheapest on any single metric, but it was balanced: MoS near 38%, EPS growth above 70%, PB around 1.2. No single percentile was extreme, but none were weak, the averaging in <code>GrahamScore</code> and <code>LynchScore</code> rewarded consistency over a one-factor spike.</p>
@@ -72,10 +72,10 @@
 
   <!-- ITMG -->
   <article class="doc-section">
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+    <div class="proof-head">
       <span class="badge badge-warning">05</span>
-      <h2 style="margin:0">ITMG - Indo Tambangraya Megah</h2>
-      <span class="pill" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: #22c55e; font-weight: 700;">Energy - +135.0%</span>
+      <h2>ITMG - Indo Tambangraya Megah</h2>
+      <span class="pill pill-gain">Energy - +135.0%</span>
     </div>
     <p><b>Period:</b> Rp 11,350 to Rp 26,675. <b>Gain +135.0%</b>, more than doubling on a large-cap base.</p>
     <p><b>Why the formula liked it:</b> ITMG paired the widest Margin of Safety in this set, around 55%, with the lowest PEG near 0.14. In percentile terms it was top-decile on both safety and growth at price, giving a GL near 88, the highest of the five. For a large, liquid name that is a strong signal that the market was underpaying.</p>

@@ -26,3 +26,15 @@ func TestRankEmpty(t *testing.T) {
 		t.Fatal("universe kosong harus []")
 	}
 }
+
+func TestRankNilROEAndPB(t *testing.T) {
+	snaps := MockUniverse()
+	snaps[0].ROE = nil
+	snaps[0].PB = nil
+	snaps[0].Revenue = nil
+	snaps[0].PrevRevenue = nil
+	r := Rank(snaps, time.Now(), 10000, 0)
+	if r.Count == 0 {
+		t.Fatal("expected ranking to succeed with missing ROE/PB")
+	}
+}

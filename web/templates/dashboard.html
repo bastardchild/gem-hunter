@@ -7,7 +7,7 @@
 <body>
 {{template "header" (hdr "dashboard" .)}}
 
-<main class="container" x-data="{ search: '', openRow: '' }">
+<main class="container" x-data="{ search: '', openRow: '', openTip: '' }" @keydown.escape.window="openTip = ''">
   <div class="hero">
     <div>
       <h1>TOP 10 IDX</h1>
@@ -22,20 +22,20 @@
   <section class="stats">
     <div class="stat"><div class="label">Candidates</div><div class="value">{{.Run.Count}}</div><div class="sub">top ranked stocks</div></div>
     <div class="stat"><div class="label">Top GL Score</div><div class="value">{{r2 (topGL .Run.Stocks)}}</div><div class="sub">scale 0 to 100</div></div>
-    <div class="stat"><div class="label">Data As Of</div><div class="value" style="font-size:16px">{{.Run.DataAsOf}}</div><div class="sub">run {{shortID .Run.RunID}}</div></div>
+    <div class="stat"><div class="label">Data As Of</div><div class="value value-sm">{{.Run.DataAsOf}}</div><div class="sub">run {{shortID .Run.RunID}}</div></div>
   </section>
 
   <div class="card">
     <div class="card-head">
       <span class="live-dot"></span><h2>RANKINGS</h2>
       <span class="htmx-indicator">refreshing…</span>
-      <div class="spacer" style="flex:1"></div>
-      <span class="hint">click row for details</span>
+      <div class="spacer"></div>
+      <span class="hint">hover ticker for why it ranked · click row for details</span>
     </div>
-    <div class="toolbar" style="padding:0 18px">
+    <div class="toolbar">
       <input type="search" placeholder="Search ticker / company…" x-model="search">
     </div>
-    <div style="overflow-x:auto">
+    <div class="rank-scroll">
     <table class="rank">
       <thead><tr>
         <th>#</th><th>Ticker</th><th>Price</th><th class="num">GL Score</th>
@@ -43,7 +43,7 @@
         <th class="num">MOS</th><th class="num">PEG</th><th class="num">EPS Growth</th><th>Status</th>
       </tr></thead>
       <tbody hx-get="/ranking/top10" hx-trigger="every 60s" hx-swap="innerHTML">
-        {{template "rows" .Run.Stocks}}
+        {{template "rows" .Rows}}
       </tbody>
     </table>
     </div>

@@ -7,4 +7,11 @@
 <link rel="stylesheet" href="/static/css/app.css">
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 <script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+<script>
+document.addEventListener("htmx:afterSwap", function (e) {
+  if (window.Alpine && e.detail && e.detail.elt) {
+    Alpine.initTree(e.detail.elt);
+  }
+});
+</script>
 {{end}}

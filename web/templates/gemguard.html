@@ -25,13 +25,13 @@
   <div class="card">
     <div class="card-head">
       <span class="live-dot"></span><h2>SURVEILLANCE</h2>
-      <div class="spacer" style="flex:1"></div>
+      <div class="spacer"></div>
       <span class="hint">click row for details</span>
     </div>
-    <div class="toolbar" style="padding:0 18px">
+    <div class="toolbar">
       <input type="search" placeholder="Search ticker / company…" x-model="search">
     </div>
-    <div style="overflow-x:auto">
+    <div class="scroll-x">
     <table class="rank">
       <thead><tr>
         <th>#</th><th>Ticker</th><th>Price</th><th class="num">Risk Score</th>
@@ -44,7 +44,7 @@
           <td><span class="rank-no">{{.Rank}}</span></td>
           <td><span class="ticker">{{.Ticker}}</span><div class="company">{{.CompanyName}} · {{.Sector}}</div></td>
           <td class="num">{{rp .Price}}</td>
-          <td class="num">{{r2 .RiskScore}}<div class="bar"><span style="width:{{pctW .RiskScore}}%"></span></div></td>
+           <td class="num">{{r2 .RiskScore}}<div class="bar"><span style="--bar:{{pctW .RiskScore}}%"></span></div></td>
           <td class="num {{if gt .PriceImpactRatio 2.0}}text-danger{{end}}">{{r2 .PriceImpactRatio}}</td>
           <td class="num {{if gte .VolumeSpike 3.0}}text-warning{{end}}">{{r2 .VolumeSpike}}x</td>
           <td class="num {{if gte .PriceSpikePct 20.0}}text-danger{{end}}">{{if gt .PriceSpikePct 0.0}}+{{end}}{{r2 .PriceSpikePct}}%</td>
@@ -79,7 +79,7 @@
               <div class="metric"><div class="k">UMA Suspected</div><div class="v">{{if .UMASuspected}}Yes{{else}}No{{end}}</div></div>
             </div>
             {{if .PrimaryRiskFactors}}
-            <div class="hint" style="margin-top:8px"><b>Risk factors:</b> {{range $i, $f := .PrimaryRiskFactors}}{{if $i}} · {{end}}{{$f}}{{end}}</div>
+            <div class="hint hint-after"><b>Risk factors:</b> {{range $i, $f := .PrimaryRiskFactors}}{{if $i}} · {{end}}{{$f}}{{end}}</div>
             {{end}}
           </td>
         </tr>

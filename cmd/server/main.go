@@ -146,7 +146,7 @@ func main() {
 	app.Get("/ready", func(c *fiber.Ctx) error { return c.SendString("ready") })
 	app.Get("/ranking/top10", func(c *fiber.Ctx) error {
 		if c.Get("HX-Request") != "" {
-			html, err := renderRows(mustLatest(store, cfg, run).Stocks)
+			html, err := renderRows(mustLatest(store, cfg, run).Stocks, aiAgent)
 			if err != nil {
 				return fiber.NewError(500, err.Error())
 			}
@@ -193,7 +193,7 @@ func main() {
 		return c.JSON(run())
 	})
 	app.Get("/", func(c *fiber.Ctx) error {
-		html, err := renderDashboard(mustLatest(store, cfg, run), cfg.RankingIntervalHours)
+		html, err := renderDashboard(mustLatest(store, cfg, run), cfg.RankingIntervalHours, aiAgent)
 		if err != nil {
 			return fiber.NewError(500, err.Error())
 		}

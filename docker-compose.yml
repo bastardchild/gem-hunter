@@ -26,7 +26,7 @@ services:
       redis:
         condition: service_healthy
 
-  # Profil opsional, NONAKTIF default. Aktifkan: docker compose --profile replication up -d
+  # Profil opsional, NONAKTIF default. Copy litestream-example.yml → litestream.yml, lalu: docker compose --profile replication up -d
   litestream:
     image: litestream/litestream:0.3
     profiles: ["replication"]

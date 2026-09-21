@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net"
+	"net/mail"
 	"net/smtp"
 	"strings"
 	"time"
@@ -28,20 +29,33 @@ func New(cfg config.Config, store *repository.Store) *Mailer {
 	return &Mailer{cfg: cfg, store: store}
 }
 
+func envelopeAddress(from string) string {
+	from = strings.TrimSpace(from)
+	if from == "" {
+		return "alerts@gemhunter.app"
+	}
+	parsed, err := mail.ParseAddress(from)
+	if err != nil || parsed.Address == "" {
+		return from
+	}
+	return parsed.Address
+}
+
 // SendRaw mengirim email via SMTP (support TLS / STARTTLS).
 func (m *Mailer) SendRaw(to []string, subject, htmlBody string) error {
 	if m.cfg.SMTPHost == "" {
 		return fmt.Errorf("SMTP_HOST belum dikonfigurasi di .env")
 	}
 
-	from := m.cfg.SMTPFrom
-	if from == "" {
-		from = "Gem Hunter <alerts@gemhunter.app>"
+	fromHeader := strings.TrimSpace(m.cfg.SMTPFrom)
+	if fromHeader == "" {
+		fromHeader = "Gem Hunter <alerts@gemhunter.app>"
 	}
+	fromAddr := envelopeAddress(fromHeader)
 
 	// Format MIME Header
 	headers := make(map[string]string)
-	headers["From"] = from
+	headers["From"] = fromHeader
 	headers["To"] = strings.Join(to, ", ")
 	headers["Subject"] = subject
 	headers["MIME-Version"] = "1.0"
@@ -89,7 +103,7 @@ func (m *Mailer) SendRaw(to []string, subject, htmlBody string) error {
 			}
 		}
 
-		if err = client.Mail(from); err != nil {
+		if err = client.Mail(fromAddr); err != nil {
 			return fmt.Errorf("smtp mail from: %w", err)
 		}
 		for _, addr := range to {
@@ -142,7 +156,7 @@ func (m *Mailer) SendRaw(to []string, subject, htmlBody string) error {
 		}
 	}
 
-	if err = client.Mail(from); err != nil {
+	if err = client.Mail(fromAddr); err != nil {
 		return fmt.Errorf("mail from: %w", err)
 	}
 	for _, addr := range to {
@@ -169,27 +183,20 @@ func (m *Mailer) SendTestEmail(ctx context.Context, email string) error {
 	<html>
 	<head>
 		<meta charset="utf-8">
-		<style>
-			body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0c0a09; color: #f2f2f2; padding: 20px; }
-			.card { background-color: #1c1917; border: 1px solid #27272a; border-radius: 8px; padding: 24px; max-width: 540px; margin: 0 auto; }
-			.badge { background-color: rgba(171, 221, 164, 0.15); color: #abdda4; padding: 4px 10px; border-radius: 999px; font-weight: bold; font-size: 12px; }
-			.btn { display: inline-block; background-color: #9e0142; color: #ffffff; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; margin-top: 16px; }
-			.footer { font-size: 11px; color: #a1a1aa; margin-top: 20px; text-align: center; }
-		</style>
 	</head>
-	<body>
-		<div class="card">
-			<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-				<span style="font-size:20px; color:#d53e4f;">◆</span>
-				<strong style="letter-spacing:1.5px; font-size:16px;">GEM HUNTER QUANT ALERTS</strong>
+	<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#0c0a09;color:#ffffff;padding:20px;margin:0;">
+		<div style="background-color:#1c1917;border:1px solid #27272a;border-radius:8px;padding:24px;max-width:540px;margin:0 auto;color:#ffffff;">
+			<div style="margin-bottom:12px;">
+				<span style="font-size:20px;color:#d53e4f;">◆</span>
+				<strong style="letter-spacing:1.5px;font-size:16px;color:#ffffff;">GEM HUNTER QUANT ALERTS</strong>
 			</div>
-			<p>Hello,</p>
-			<p>This is a confirmation message that your <strong>Gem Hunter</strong> email alert integration is now active!</p>
-			<p>You will receive automated surveillance digests tailored to your preferences during scheduled screening runs (00:00, 06:00, 12:00, 18:00 WIB) or upon critical market anomalies.</p>
-			<div style="margin: 16px 0;">
-				<span class="badge">SMTP Connection: Verified & Ready</span>
+			<p style="color:#ffffff;">Hello,</p>
+			<p style="color:#ffffff;">This is a confirmation message that your <strong style="color:#ffffff;">Gem Hunter</strong> email alert integration is now active!</p>
+			<p style="color:#ffffff;">You will receive automated surveillance digests tailored to your preferences during scheduled screening runs (00:00, 06:00, 12:00, 18:00 WIB) or upon critical market anomalies.</p>
+			<div style="margin:16px 0;">
+				<span style="background-color:#1f3d2a;color:#abdda4;padding:4px 10px;border-radius:999px;font-weight:bold;font-size:12px;">SMTP Connection: Verified &amp; Ready</span>
 			</div>
-			<div class="footer">
+			<div style="font-size:11px;color:#a1a1aa;margin-top:20px;text-align:center;">
 				Sent automatically at %s WIB · Gem Hunter Quantitative Engine
 			</div>
 		</div>
@@ -224,50 +231,35 @@ var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{
 <html>
 <head>
 <meta charset="utf-8">
-<style>
-	body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0c0a09; color: #f2f2f2; margin: 0; padding: 24px 12px; }
-	.container { max-width: 600px; margin: 0 auto; background: #1c1917; border: 1px solid #27272a; border-radius: 10px; overflow: hidden; }
-	.header { padding: 20px 24px; border-bottom: 1px solid #27272a; background: #141210; }
-	.brand { font-weight: 800; font-size: 16px; letter-spacing: 1.5px; color: #f2f2f2; }
-	.section { padding: 20px 24px; border-bottom: 1px solid #292524; }
-	h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #abdda4; }
-	table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-	th { text-align: left; font-size: 11px; text-transform: uppercase; color: #a1a1aa; padding: 6px 8px; border-bottom: 1px solid #27272a; }
-	td { padding: 8px 8px; border-bottom: 1px solid #292524; }
-	.badge-danger { color: #d53e4f; font-weight: bold; }
-	.badge-warning { color: #fdae61; font-weight: bold; }
-	.badge-success { color: #abdda4; font-weight: bold; }
-	.footer { padding: 16px 24px; font-size: 11px; color: #a1a1aa; text-align: center; background: #141210; }
-</style>
 </head>
-<body>
-<div class="container">
-	<div class="header">
-		<div class="brand">◆ GEM HUNTER · SURVEILLANCE & QUANT DIGEST</div>
-		<div style="font-size:12px; color:#a1a1aa; margin-top:4px;">Scheduled Screening Update: {{.CalculatedAt}} WIB</div>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0c0a09;color:#ffffff;margin:0;padding:24px 12px;">
+<div style="max-width:600px;margin:0 auto;background:#1c1917;border:1px solid #27272a;border-radius:10px;overflow:hidden;color:#ffffff;">
+	<div style="padding:20px 24px;border-bottom:1px solid #27272a;background:#141210;">
+		<div style="font-weight:800;font-size:16px;letter-spacing:1.5px;color:#ffffff;">◆ GEM HUNTER · SURVEILLANCE & QUANT DIGEST</div>
+		<div style="font-size:12px;color:#a1a1aa;margin-top:4px;">Scheduled Screening Update: {{.CalculatedAt}} WIB</div>
 	</div>
 
 	{{if .TopGems}}
-	<div class="section">
-		<h3>◆ Top Graham-Lynch Undervalued Gems</h3>
-		<table>
+	<div style="padding:20px 24px;border-bottom:1px solid #292524;color:#ffffff;">
+		<h3 style="margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#abdda4;">◆ Top Graham-Lynch Undervalued Gems</h3>
+		<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;color:#ffffff;">
 			<thead>
 				<tr>
-					<th>Rank</th>
-					<th>Ticker</th>
-					<th>Price</th>
-					<th>GL Score</th>
-					<th>Margin Safety</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Rank</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Ticker</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Price</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">GL Score</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Margin Safety</th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .TopGems}}
 				<tr>
-					<td>#{{.Rank}}</td>
-					<td><b>{{.Ticker}}</b></td>
-					<td>Rp {{.Price}}</td>
-					<td class="badge-success">{{printf "%.1f" .GLScore}}</td>
-					<td>{{printf "%.1f%%" (mul .MarginOfSafety 100.0)}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">#{{.Rank}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;"><b style="color:#ffffff;">{{.Ticker}}</b></td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">Rp {{.Price}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#abdda4;font-weight:bold;">{{printf "%.1f" .GLScore}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">{{printf "%.1f%%" (mul .MarginOfSafety 100.0)}}</td>
 				</tr>
 				{{end}}
 			</tbody>
@@ -276,24 +268,24 @@ var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{
 	{{end}}
 
 	{{if .GuardStocks}}
-	<div class="section">
-		<h3 style="color:#fdae61;">🛡 Gem Guard High-Risk Surveillance</h3>
-		<table>
+	<div style="padding:20px 24px;border-bottom:1px solid #292524;color:#ffffff;">
+		<h3 style="margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#fdae61;">Gem Guard High-Risk Surveillance</h3>
+		<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;color:#ffffff;">
 			<thead>
 				<tr>
-					<th>Ticker</th>
-					<th>Risk Score</th>
-					<th>PIR</th>
-					<th>UMA Spike</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Ticker</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Risk Score</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">PIR</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">UMA Spike</th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .GuardStocks}}
 				<tr>
-					<td><b>{{.Ticker}}</b></td>
-					<td class="badge-danger">{{printf "%.1f" .RiskScore}} ({{.RiskLevel}})</td>
-					<td>{{printf "%.2f" .PriceImpactRatio}}</td>
-					<td>{{printf "%.2fx" .VolumeSpike}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;"><b style="color:#ffffff;">{{.Ticker}}</b></td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#d53e4f;font-weight:bold;">{{printf "%.1f" .RiskScore}} ({{.RiskLevel}})</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">{{printf "%.2f" .PriceImpactRatio}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">{{printf "%.2fx" .VolumeSpike}}</td>
 				</tr>
 				{{end}}
 			</tbody>
@@ -302,22 +294,22 @@ var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{
 	{{end}}
 
 	{{if .Sentinel}}
-	<div class="section">
-		<h3 style="color:#d53e4f;">⚠️ Gem Sentinel Distress Radar</h3>
-		<table>
+	<div style="padding:20px 24px;border-bottom:1px solid #292524;color:#ffffff;">
+		<h3 style="margin-top:0;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:#d53e4f;">Gem Sentinel Distress Radar</h3>
+		<table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;color:#ffffff;">
 			<thead>
 				<tr>
-					<th>Ticker</th>
-					<th>Springate Score</th>
-					<th>Status</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Ticker</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Springate Score</th>
+					<th style="text-align:left;font-size:11px;text-transform:uppercase;color:#a1a1aa;padding:6px 8px;border-bottom:1px solid #27272a;">Status</th>
 				</tr>
 			</thead>
 			<tbody>
 				{{range .Sentinel}}
 				<tr>
-					<td><b>{{.Ticker}}</b></td>
-					<td class="badge-danger">{{printf "%.2f" .Springate.Score}}</td>
-					<td>{{.Springate.Zone}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;"><b style="color:#ffffff;">{{.Ticker}}</b></td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#d53e4f;font-weight:bold;">{{printf "%.2f" .Springate.Score}}</td>
+					<td style="padding:8px;border-bottom:1px solid #292524;color:#ffffff;">{{.Springate.Zone}}</td>
 				</tr>
 				{{end}}
 			</tbody>
@@ -325,7 +317,7 @@ var digestTmpl = template.Must(template.New("digest").Funcs(template.FuncMap{
 	</div>
 	{{end}}
 
-	<div class="footer">
+	<div style="padding:16px 24px;font-size:11px;color:#a1a1aa;text-align:center;background:#141210;">
 		Quantitative research digest · GEM HUNTER Framework
 	</div>
 </div>

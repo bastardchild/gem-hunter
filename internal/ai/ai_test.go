@@ -76,4 +76,7 @@ func TestAnalystDeterministic(t *testing.T) {
 	if len(analysis.Risks) == 0 {
 		t.Errorf("Expected risk points")
 	}
+	if analysis.WhyRanked == "" {
+		t.Errorf("Expected WhyRanked explanation")
+	}
 }
